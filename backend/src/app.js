@@ -1,17 +1,26 @@
 const express = require("express");
 const cors = require("cors");
 
+const healthRoutes = require("./routes/health.routes");
+
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Health check
-app.get("/api/health", (req, res) => {
+app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "EduPond API is running",
+    message: "Welcome to EduPond API",
+  });
+});
+
+app.use("/api/health", healthRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
   });
 });
 
