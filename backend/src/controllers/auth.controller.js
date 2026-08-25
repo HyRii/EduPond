@@ -1,21 +1,22 @@
 const authService = require("../services/auth.service");
 const { generateAccessToken } = require("../utils/jwt");
 
-const register = async (req, res) => {
+const registerStudent = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Name, email, and password are required",
+        message: "Name, email and password are required",
       });
     }
 
-    const user = await authService.registerStudent({
+    const user = await authService.registerUser({
       name: name.trim(),
       email: email.trim().toLowerCase(),
       password,
+      role: "STUDENT",
     });
 
     return res.status(201).json({
@@ -26,7 +27,44 @@ const register = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Registration error:", error);
+    console.error("Student registration error:", error);
+
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.statusCode
+        ? error.message
+        : "Internal server error",
+    });
+  }
+};
+
+const registerInstructor = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email and password are required",
+      });
+    }
+
+    const user = await authService.registerUser({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      role: "INSTRUCTOR",
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Instructor registered successfully",
+      data: {
+        user,
+      },
+    });
+  } catch (error) {
+    console.error("Instructor registration error:", error);
 
     return res.status(error.statusCode || 500).json({
       success: false,
@@ -85,8 +123,20 @@ const getCurrentUser = async (req, res) => {
   });
 };
 
+const getAdminTest = async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: "Admin access granted",
+    data: {
+      user: req.user,
+    },
+  });
+};
+
 module.exports = {
-  register,
+  registerStudent,
+  registerInstructor,
   login,
   getCurrentUser,
+  getAdminTest,
 };

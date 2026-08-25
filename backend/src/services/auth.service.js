@@ -1,51 +1,65 @@
 const bcrypt = require("bcrypt");
 const pool = require("../config/database");
 
-const registerStudent = async ({ name, email, password }) => {
-  const connection = await pool.getConnection();
+const registerUser = async ({
+  name,
+  email,
+  password,
+  role,
+}) => {
+  const [existingUsers] = await pool.execute(
+    `SELECT id
+     FROM users
+     WHERE email = ?
+     LIMIT 1`,
+    [email]
+  );
 
-  try {
-    const [existingUsers] = await connection.execute(
-      "SELECT id FROM users WHERE email = ? LIMIT 1",
-      [email]
-    );
+  if (existingUsers.length > 0) {
+    const error = new Error("Email is already registered");
+    error.statusCode = 409;
+    throw error;
+  }
 
-    if (existingUsers.length > 0) {
-      const error = new Error("Email is already registered");
-      error.statusCode = 409;
-      throw error;
-    }
+  const [roles] = await pool.execute(
+    `SELECT id, name
+     FROM roles
+     WHERE name = ?
+     LIMIT 1`,
+    [role]
+  );
 
-    const [roles] = await connection.execute(
-      "SELECT id FROM roles WHERE name = 'STUDENT' LIMIT 1"
-    );
+  if (roles.length === 0) {
+    const error = new Error("Invalid role");
+    error.statusCode = 400;
+    throw error;
+  }
 
-    if (roles.length === 0) {
-      const error = new Error("STUDENT role is not configured");
-      error.statusCode = 500;
-      throw error;
-    }
+  const passwordHash = await bcrypt.hash(password, 12);
 
-    const studentRoleId = roles[0].id;
-
-    const passwordHash = await bcrypt.hash(password, 12);
-
-    const [result] = await connection.execute(
-      `INSERT INTO users
-        (role_id, name, email, password_hash, status)
-       VALUES (?, ?, ?, ?, 'ACTIVE')`,
-      [studentRoleId, name, email, passwordHash]
-    );
-
-    return {
-      id: result.insertId,
+  const [result] = await pool.execute(
+    `INSERT INTO users (
+      role_id,
       name,
       email,
-      role: "STUDENT",
-    };
-  } finally {
-    connection.release();
-  }
+      password_hash,
+      status
+    )
+    VALUES (?, ?, ?, ?, 'ACTIVE')`,
+    [
+      roles[0].id,
+      name,
+      email,
+      passwordHash,
+    ]
+  );
+
+  return {
+    id: result.insertId,
+    name,
+    email,
+    role,
+  };
 };
 
 const login = async ({ email, password }) => {
@@ -98,6 +112,6 @@ const login = async ({ email, password }) => {
 };
 
 module.exports = {
-  registerStudent,
+  registerUser,
   login,
 };
