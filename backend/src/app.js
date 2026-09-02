@@ -5,6 +5,7 @@ const healthRoutes = require("./routes/health.routes");
 const categoryRoutes = require("./routes/category.routes");
 const courseRoutes = require("./routes/course.routes");
 const sectionRoutes = require("./routes/section.routes");
+const lessonRoutes = require("./routes/lesson.routes")
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use("/api/categories", categoryRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api", sectionRoutes);
+app.use("/api", lessonRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({
