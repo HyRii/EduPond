@@ -3,12 +3,14 @@ const cors = require("cors");
 const authRoutes = require("./routes/auth.routes");
 const healthRoutes = require("./routes/health.routes");
 const categoryRoutes = require("./routes/category.routes");
+const courseRoutes = require("./routes/course.routes");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/categories", categoryRoutes);
+app.use("/api/courses", courseRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({
