@@ -73,9 +73,9 @@ const createCourse = async ({
   return getCourseById(result.insertId);
 };
 
-const getCourses = async () => {
-  const [rows] = await pool.execute(
-    `SELECT
+const getCourses = async (userId, userRole) => {
+  let query = `
+    SELECT
       c.id,
       c.instructor_id,
       u.name AS instructor_name,
@@ -98,15 +98,37 @@ const getCourses = async () => {
       ON u.id = c.instructor_id
     INNER JOIN categories cat
       ON cat.id = c.category_id
-    ORDER BY c.created_at DESC`
-  );
+  `;
+
+  const params = [];
+
+  if (userRole === "STUDENT") {
+    query += `
+      WHERE c.status = 'PUBLISHED'
+    `;
+  } else if (userRole === "INSTRUCTOR") {
+    query += `
+      WHERE c.instructor_id = ?
+    `;
+    params.push(userId);
+  }
+
+  query += `
+    ORDER BY c.created_at DESC
+  `;
+
+  const [rows] = await pool.execute(query, params);
 
   return rows;
 };
 
-const getCourseById = async (courseId) => {
-  const [rows] = await pool.execute(
-    `SELECT
+const getCourseById = async (
+  courseId,
+  userId,
+  userRole
+) => {
+  let query = `
+    SELECT
       c.id,
       c.instructor_id,
       u.name AS instructor_name,
@@ -130,9 +152,26 @@ const getCourseById = async (courseId) => {
     INNER JOIN categories cat
       ON cat.id = c.category_id
     WHERE c.id = ?
-    LIMIT 1`,
-    [courseId]
-  );
+  `;
+
+  const params = [courseId];
+
+  if (userRole === "STUDENT") {
+    query += `
+      AND c.status = 'PUBLISHED'
+    `;
+  } else if (userRole === "INSTRUCTOR") {
+    query += `
+      AND c.instructor_id = ?
+    `;
+    params.push(userId);
+  }
+
+  query += `
+    LIMIT 1
+  `;
+
+  const [rows] = await pool.execute(query, params);
 
   if (rows.length === 0) {
     const error = new Error("Course not found");
@@ -237,6 +276,105 @@ if (userRole !== "ADMIN" && course.instructor_id !== userId) {
   return getCourseById(courseId);
 };
 
+const submitCourse = async (courseId, userId, userRole) => {
+  const course = await getCourseById(courseId);
+
+  if (
+    userRole !== "ADMIN" &&
+    course.instructor_id !== userId
+  ) {
+    const error = new Error(
+      "You can only submit your own course"
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (course.status !== "DRAFT") {
+    const error = new Error(
+      "Only draft courses can be submitted"
+    );
+    error.statusCode = 409;
+    throw error;
+  }
+
+  await pool.execute(
+    `UPDATE courses
+     SET status = 'PENDING_REVIEW'
+     WHERE id = ?`,
+    [courseId]
+  );
+
+  return getCourseById(courseId);
+};
+
+const publishCourse = async (courseId) => {
+  const course = await getCourseById(courseId);
+
+  if (course.status !== "PENDING_REVIEW") {
+    const error = new Error(
+      "Only courses pending review can be published"
+    );
+    error.statusCode = 409;
+    throw error;
+  }
+
+  await pool.execute(
+    `UPDATE courses
+     SET
+       status = 'PUBLISHED',
+       published_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [courseId]
+  );
+
+  return getCourseById(courseId);
+};
+
+const rejectCourse = async (courseId) => {
+  const course = await getCourseById(courseId);
+
+  if (course.status !== "PENDING_REVIEW") {
+    const error = new Error(
+      "Only courses pending review can be rejected"
+    );
+    error.statusCode = 409;
+    throw error;
+  }
+
+  await pool.execute(
+    `UPDATE courses
+     SET
+       status = 'REJECTED',
+       published_at = NULL
+     WHERE id = ?`,
+    [courseId]
+  );
+
+  return getCourseById(courseId);
+};
+
+const archiveCourse = async (courseId) => {
+  const course = await getCourseById(courseId);
+
+  if (course.status !== "PUBLISHED") {
+    const error = new Error(
+      "Only published courses can be archived"
+    );
+    error.statusCode = 409;
+    throw error;
+  }
+
+  await pool.execute(
+    `UPDATE courses
+     SET status = 'ARCHIVED'
+     WHERE id = ?`,
+    [courseId]
+  );
+
+  return getCourseById(courseId);
+};
+
 const deleteCourse = async (
   courseId,
   userId,
@@ -270,4 +408,8 @@ module.exports = {
   getCourseById,
   updateCourse,
   deleteCourse,
+  submitCourse,
+  publishCourse,
+  rejectCourse,
+  archiveCourse,
 };

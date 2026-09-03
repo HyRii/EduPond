@@ -58,7 +58,10 @@ const createCourse = async (req, res) => {
 const getCourses = async (req, res) => {
   try {
     const courses =
-      await courseService.getCourses();
+      await courseService.getCourses(
+        req.user.id,
+        req.user.role
+      );
 
     return res.status(200).json({
       success: true,
@@ -70,9 +73,11 @@ const getCourses = async (req, res) => {
   } catch (error) {
     console.error("Get courses error:", error);
 
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       success: false,
-      message: "Internal server error",
+      message: error.statusCode
+        ? error.message
+        : "Internal server error",
     });
   }
 };
@@ -81,7 +86,9 @@ const getCourseById = async (req, res) => {
   try {
     const course =
       await courseService.getCourseById(
-        req.params.id
+        req.params.id,
+        req.user.id,
+        req.user.role
       );
 
     return res.status(200).json({
@@ -208,10 +215,120 @@ const deleteCourse = async (req, res) => {
   }
 };
 
+const submitCourse = async (req, res) => {
+  try {
+    const course =
+      await courseService.submitCourse(
+        req.params.id,
+        req.user.id,
+        req.user.role
+      );
+
+    return res.status(200).json({
+      success: true,
+      message: "Course submitted for review",
+      data: {
+        course,
+      },
+    });
+  } catch (error) {
+    console.error("Submit course error:", error);
+
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.statusCode
+        ? error.message
+        : "Internal server error",
+    });
+  }
+};
+
+const publishCourse = async (req, res) => {
+  try {
+    const course =
+      await courseService.publishCourse(
+        req.params.id
+      );
+
+    return res.status(200).json({
+      success: true,
+      message: "Course published successfully",
+      data: {
+        course,
+      },
+    });
+  } catch (error) {
+    console.error("Publish course error:", error);
+
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.statusCode
+        ? error.message
+        : "Internal server error",
+    });
+  }
+};
+
+const rejectCourse = async (req, res) => {
+  try {
+    const course =
+      await courseService.rejectCourse(
+        req.params.id
+      );
+
+    return res.status(200).json({
+      success: true,
+      message: "Course rejected successfully",
+      data: {
+        course,
+      },
+    });
+  } catch (error) {
+    console.error("Reject course error:", error);
+
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.statusCode
+        ? error.message
+        : "Internal server error",
+    });
+  }
+};
+
+const archiveCourse = async (req, res) => {
+  try {
+    const course =
+      await courseService.archiveCourse(
+        req.params.id
+      );
+
+    return res.status(200).json({
+      success: true,
+      message: "Course archived successfully",
+      data: {
+        course,
+      },
+    });
+  } catch (error) {
+    console.error("Archive course error:", error);
+
+    return res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.statusCode
+        ? error.message
+        : "Internal server error",
+    });
+  }
+};
+
 module.exports = {
   createCourse,
   getCourses,
   getCourseById,
   updateCourse,
   deleteCourse,
+  submitCourse,
+  publishCourse,
+  rejectCourse,
+  archiveCourse,
 };
