@@ -87,9 +87,25 @@ const AppRouter = () => {
         <p>
           Welcome to EduPond, Student.
         </p>
+<a href="/student/courses">
+  Browse Courses
+</a>
+
 
         <LogoutButton />
       </div>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/student/courses"
+  element={
+    <ProtectedRoute allowedRoles={["STUDENT"]}>
+      <CourseCatalog />
+      <p>
+          Your Courses
+        </p>
     </ProtectedRoute>
   }
 />

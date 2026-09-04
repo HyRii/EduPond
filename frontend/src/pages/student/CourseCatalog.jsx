@@ -1,36 +1,24 @@
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  getCourses,
-} from "../../services/course.service";
+import { useEffect, useState } from "react";
+import { getCourses } from "../../services/course.service";
+import CourseCard from "../../components/course/CourseCard";
 
 const CourseCatalog = () => {
-  const [courses, setCourses] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const loadCourses = async () => {
       try {
-        const response =
-          await getCourses();
+        setLoading(true);
+        setError("");
 
-        setCourses(
-          response?.data?.courses || []
-        );
-      } catch (error) {
-        setError(
-          error.message ||
-            "Failed to load courses"
-        );
+        const response = await getCourses();
+        console.log("Courses API response:", response);
+        setCourses(response?.data?.courses || []);
+      } catch (err) {
+        console.error("Failed to load courses:", err);
+        setError(err.message || "Failed to load courses.");
       } finally {
         setLoading(false);
       }
@@ -40,50 +28,43 @@ const CourseCatalog = () => {
   }, []);
 
   if (loading) {
-    return <p>Loading courses...</p>;
+    return (
+      <section>
+        <h1>Course Catalog</h1>
+        <p>Loading courses...</p>
+      </section>
+    );
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return (
+      <section>
+        <h1>Course Catalog</h1>
+        <p>{error}</p>
+      </section>
+    );
   }
 
   return (
-    <main>
-      <h1>Explore Courses</h1>
+    <section>
+      <div>
+        <h1>Course Catalog</h1>
+        <p>Explore courses and start your learning journey.</p>
+      </div>
 
       {courses.length === 0 ? (
-        <p>
-          No published courses available.
-        </p>
+        <p>No published courses available.</p>
       ) : (
-        <div>
+        <div className="course-grid">
           {courses.map((course) => (
-            <article key={course.id}>
-              <h2>{course.title}</h2>
-
-              <p>
-                {course.description}
-              </p>
-
-              <p>
-                Instructor:{" "}
-                {course.instructor_name}
-              </p>
-
-              <p>
-                Category:{" "}
-                {course.category_name}
-              </p>
-
-              <p>
-                Difficulty:{" "}
-                {course.difficulty}
-              </p>
-            </article>
+            <CourseCard
+              key={course.id}
+              course={course}
+            />
           ))}
         </div>
       )}
-    </main>
+    </section>
   );
 };
 

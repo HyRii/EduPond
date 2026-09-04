@@ -28,15 +28,24 @@ const apiRequest = async (
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const error = new Error(
-      data?.message || "Something went wrong"
-    );
+  if (response.status === 401) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
-    error.status = response.status;
-    error.data = data;
+    window.location.href = "/login";
 
-    throw error;
+    return;
   }
+
+  const error = new Error(
+    data?.message || "Something went wrong"
+  );
+
+  error.status = response.status;
+  error.data = data;
+
+  throw error;
+}
 
   return data;
 };
