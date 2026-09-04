@@ -17,4 +17,256 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+
+  background: #f5f7fb;
+  color: #1f2937;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* ==================== */
+/* AUTH */
+/* ==================== */
+
+.auth-page {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+
+  background: white;
+
+  padding: 40px;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.auth-header {
+  margin-bottom: 28px;
+}
+
+.auth-header h1 {
+  margin: 0 0 8px;
+
+  font-size: 32px;
+}
+
+.auth-header p {
+  margin: 0;
+
+  color: #6b7280;
+}
+
+/* ==================== */
+/* FORM */
+/* ==================== */
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-group input {
+  width: 100%;
+
+  padding: 12px 14px;
+
+  border: 1px solid #d1d5db;
+
+  border-radius: 8px;
+
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #2563eb;
+}
+
+.auth-button {
+  width: 100%;
+
+  margin-top: 8px;
+
+  padding: 13px 16px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #2563eb;
+  color: white;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.auth-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==================== */
+/* ERROR */
+/* ==================== */
+
+.auth-error {
+  margin-bottom: 18px;
+
+  padding: 12px;
+
+  border-radius: 8px;
+
+  background: #fee2e2;
+  color: #991b1b;
+
+  font-size: 14px;
+}
+
+/* ==================== */
+/* FOOTER */
+/* ==================== */
+
+.auth-footer {
+  margin-top: 24px;
+
+  text-align: center;
+
+  font-size: 14px;
+}
+
+.auth-footer p {
+  margin: 0 0 10px;
+
+  color: #6b7280;
+}
+
+.auth-footer a {
+  color: #2563eb;
+
+  text-decoration: none;
+
+  font-weight: 600;
+}
+
+.auth-links {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 16px;
+
+  flex-wrap: wrap;
+}
+
+/* ==================== */
+/* HOME */
+/* ==================== */
+
+.home-page {
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 24px;
+}
+
+.home-page h1 {
+  margin-bottom: 8px;
+
+  font-size: 48px;
+}
+
+.home-page p {
+  margin: 4px;
+
+  color: #6b7280;
+}
+
+.home-actions {
+  display: flex;
+
+  gap: 12px;
+
+  flex-wrap: wrap;
+
+  justify-content: center;
+
+  margin-top: 28px;
+}
+
+.home-actions a {
+  padding: 12px 18px;
+
+  border-radius: 8px;
+
+  background: #2563eb;
+  color: white;
+
+  text-decoration: none;
+
+  font-weight: 600;
+}
+
+/* ==================== */
+/* SIMPLE PAGE */
+/* ==================== */
+
+.simple-page {
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.logout-button {
+  margin-top: 24px;
+
+  padding: 10px 18px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #dc2626;
+  color: white;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  opacity: 0.9;
 }
