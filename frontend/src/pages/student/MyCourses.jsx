@@ -1,96 +1,162 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getMyEnrollments } from "../../services/enrollment.service";
+import {
+  getMyEnrollments,
+} from "../../services/enrollment.service";
 
 const MyCourses = () => {
+
   const navigate = useNavigate();
 
-  const [enrollments, setEnrollments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [enrollments, setEnrollments] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
 
   useEffect(() => {
-    const loadMyCourses = async () => {
-      try {
-        setLoading(true);
-        setError("");
 
-        const response = await getMyEnrollments();
+    const loadMyCourses =
+      async () => {
 
-        console.log("MY COURSES RESPONSE:", response);
+        try {
 
-        const courses =
-          response?.data?.enrollments || [];
+          setLoading(true);
+          setError("");
 
-        console.log("MY COURSES DATA:", courses);
+          const response =
+            await getMyEnrollments();
 
-        setEnrollments(courses);
-      } catch (err) {
-        console.error("MY COURSES ERROR:", err);
+          setEnrollments(
+            response?.data?.enrollments ||
+            []
+          );
 
-        setError(
-          err.message || "Failed to load your courses."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+        } catch (error) {
+
+          setError(
+            error.message ||
+            "Failed to load your courses."
+          );
+
+        } finally {
+
+          setLoading(false);
+
+        }
+
+      };
 
     loadMyCourses();
+
   }, []);
 
-  // =========================
-  // LOADING
-  // =========================
-
   if (loading) {
+
     return (
-      <section className="my-courses-page">
-        <h1>My Courses</h1>
-        <p>Loading your courses...</p>
+      <section className="student-page">
+
+        <div className="student-page-header">
+
+          <div>
+            <p className="page-eyebrow">
+              STUDENT
+            </p>
+
+            <h1>My Courses</h1>
+          </div>
+
+        </div>
+
+        <div className="student-state">
+          Loading your courses...
+        </div>
+
       </section>
     );
+
   }
 
-  // =========================
-  // ERROR
-  // =========================
-
   if (error) {
-    return (
-      <section className="my-courses-page">
-        <h1>My Courses</h1>
 
-        <p>{error}</p>
+    return (
+      <section className="student-page">
+
+        <div className="student-page-header">
+
+          <div>
+            <p className="page-eyebrow">
+              STUDENT
+            </p>
+
+            <h1>My Courses</h1>
+          </div>
+
+        </div>
+
+        <div className="student-error">
+          {error}
+        </div>
 
         <button
           type="button"
-          onClick={() => navigate("/student/courses")}
+          onClick={() =>
+            navigate(
+              "/student/courses"
+            )
+          }
         >
           Browse Courses
         </button>
+
       </section>
     );
+
   }
 
-  // =========================
-  // SUCCESS
-  // =========================
-
   return (
-    <section className="my-courses-page">
-      <h1>My Courses</h1>
+    <section className="student-page">
 
-      <p>
-        Courses you have enrolled in.
-      </p>
+      <div className="student-page-header">
 
-      {/* EMPTY STATE */}
+        <div>
 
-      {enrollments.length === 0 && (
-        <div className="empty-courses">
-          <h2>No Courses Yet</h2>
+          <p className="page-eyebrow">
+            STUDENT
+          </p>
+
+          <h1>My Courses</h1>
+
+          <p className="page-description">
+            Courses you have enrolled in.
+          </p>
+
+        </div>
+
+        <button
+          type="button"
+          onClick={() =>
+            navigate(
+              "/student/courses"
+            )
+          }
+        >
+          Browse Courses
+        </button>
+
+      </div>
+
+      {enrollments.length === 0 ? (
+
+        <div className="student-empty">
+
+          <h2>
+            No Courses Yet
+          </h2>
 
           <p>
             You have not enrolled in any courses yet.
@@ -99,77 +165,101 @@ const MyCourses = () => {
           <button
             type="button"
             onClick={() =>
-              navigate("/student/courses")
+              navigate(
+                "/student/courses"
+              )
             }
           >
             Browse Courses
           </button>
+
         </div>
-      )}
 
-      {/* COURSE LIST */}
+      ) : (
 
-      {enrollments.length > 0 && (
-        <div className="my-courses">
-          {enrollments.map((enrollment) => (
-            <article
-              key={enrollment.id}
-              className="my-course-card"
-            >
-              {enrollment.thumbnail_url && (
-                <img
-                  src={enrollment.thumbnail_url}
-                  alt={enrollment.title}
-                  className="my-course-thumbnail"
-                />
-              )}
+        <div className="student-course-grid">
 
-              <div className="my-course-content">
-                <p>
-                  {enrollment.category_name}
-                </p>
+          {enrollments.map(
+            (enrollment) => (
 
-                <h2>
-                  {enrollment.title}
-                </h2>
+              <article
+                key={enrollment.id}
+                className="student-course-card"
+              >
 
-                <p>
-                  Instructor:{" "}
-                  {enrollment.instructor_name}
-                </p>
+                {enrollment.thumbnail_url && (
 
-                <p>
-                  Difficulty:{" "}
-                  {enrollment.difficulty}
-                </p>
+                  <img
+                    src={
+                      enrollment.thumbnail_url
+                    }
+                    alt={
+                      enrollment.title
+                    }
+                    className="student-course-thumbnail"
+                  />
 
-                {enrollment.duration_minutes && (
-                  <p>
-                    Duration:{" "}
-                    {enrollment.duration_minutes} minutes
-                  </p>
                 )}
 
-                <p>
-                  Status:{" "}
-                  {enrollment.status}
-                </p>
+                <div className="student-course-content">
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    navigate(
-                      `/student/my-courses/${enrollment.id}`
-                    )
-                  }
-                >
-                  Open Course
-                </button>
-              </div>
-            </article>
-          ))}
+                  <p className="course-category">
+                    {enrollment.category_name ||
+                      "Uncategorized"}
+                  </p>
+
+                  <h2>
+                    {enrollment.title}
+                  </h2>
+
+                  <p>
+                    Instructor:{" "}
+                    {enrollment.instructor_name ||
+                      "-"}
+                  </p>
+
+                  <div className="course-meta">
+
+                    <span>
+                      Difficulty:{" "}
+                      {enrollment.difficulty ||
+                        "-"}
+                    </span>
+
+                    {enrollment.duration_minutes && (
+                      <span>
+                        Duration:{" "}
+                        {
+                          enrollment.duration_minutes
+                        }{" "}
+                        min
+                      </span>
+                    )}
+
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate(
+                        `/student/my-courses/${enrollment.id}`
+                      )
+                    }
+                  >
+                    Open Course
+                  </button>
+
+                </div>
+
+              </article>
+
+            )
+          )}
+
         </div>
+
       )}
+
     </section>
   );
 };

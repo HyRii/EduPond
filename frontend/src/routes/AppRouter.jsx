@@ -26,6 +26,10 @@ import InstructorCourses from "../pages/instructor/InstructorCourses";
 import CourseForm from "../pages/instructor/CourseForm";
 import CourseBuilder from "../pages/instructor/CourseBuilder";
 
+//STUDENT
+import StudentLayout from "../layouts/StudentLayout";
+import StudentHome from "../pages/student/StudentHome";
+
 const AppRouter = () => {
   return (
     <BrowserRouter>
@@ -100,53 +104,79 @@ const AppRouter = () => {
 <Route
   path="/student"
   element={
-    <ProtectedRoute allowedRoles={["STUDENT"]}>
+    <ProtectedRoute
+      allowedRoles={["STUDENT"]}
+    >
+      <StudentLayout />
+    </ProtectedRoute>
+  }
+>
+  <Route
+    index
+    element={<StudentHome />}
+  />
+
+  <Route
+    path="courses"
+    element={<CourseCatalog />}
+  />
+
+  <Route
+    path="courses/:id"
+    element={<CourseDetail />}
+  />
+
+  <Route
+    path="my-courses"
+    element={<MyCourses />}
+  />
+
+  {/* Future Phase 2 */}
+  <Route
+    path="my-courses/:enrollmentId"
+    element={
       <div className="simple-page">
-        <h1>Student Dashboard</h1>
+        <h1>Course Learning</h1>
 
         <p>
-          Welcome to EduPond, Student.
+          Lesson progress will be implemented
+          in Phase 2.
         </p>
-<a href="/student/courses">
-  Browse Courses
-</a>
-
-
-        <LogoutButton />
       </div>
-    </ProtectedRoute>
-  }
-/>
+    }
+  />
 
-<Route
-  path="/student/courses"
-  element={
-    <ProtectedRoute allowedRoles={["STUDENT"]}>
-      <CourseCatalog />
-      <p>
-          Your Courses
+  {/* Future Phase 4 */}
+  <Route
+    path="course-requests"
+    element={
+      <div className="simple-page">
+        <h1>Ask Course</h1>
+
+        <p>
+          Ask Course will be implemented
+          in Phase 4.
         </p>
-    </ProtectedRoute>
-  }
-/>
+      </div>
+    }
+  />
 
-<Route
-  path="/student/courses/:id"
-  element={
-    <ProtectedRoute allowedRoles={["STUDENT"]}>
-      <CourseDetail />
-    </ProtectedRoute>
-  }
-/>
+  {/* Future Phase 3 */}
+  <Route
+    path="certificates"
+    element={
+      <div className="simple-page">
+        <h1>Certificates</h1>
 
-<Route
-  path="/student/my-courses"
-  element={
-    <ProtectedRoute allowedRoles={["STUDENT"]}>
-      <MyCourses />
-    </ProtectedRoute>
-  }
-/>
+        <p>
+          Certificates will be implemented
+          in Phase 3.
+        </p>
+      </div>
+    }
+  />
+
+</Route>
 
 {/* ==================== */}
 {/* INSTRUCTOR */}
