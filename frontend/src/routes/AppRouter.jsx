@@ -12,6 +12,13 @@ import CourseCatalog from "../pages/student/CourseCatalog";
 import CourseDetail from "../pages/student/CourseDetail";
 import MyCourses from "../pages/student/MyCourses";
 
+//ADMIN
+import AdminLayout from "../layouts/AdminLayout";
+import AdminHome from "../pages/admin/AdminHome";
+import UserManagement from "../pages/admin/UserManagement";
+import CategoryManagement from "../pages/admin/CategoryManagement";
+import CourseModeration from "../pages/admin/CourseModeration";
+
 const AppRouter = () => {
   return (
     <BrowserRouter>
@@ -163,18 +170,58 @@ const AppRouter = () => {
   path="/admin"
   element={
     <ProtectedRoute allowedRoles={["ADMIN"]}>
-      <div className="simple-page">
-        <h1>Admin Dashboard</h1>
-
-        <p>
-          Welcome to EduPond, Admin.
-        </p>
-
-        <LogoutButton />
-      </div>
+      <AdminLayout />
     </ProtectedRoute>
   }
-/>
+>
+  <Route
+    index
+    element={<AdminHome />}
+  />
+
+  <Route
+    path="users"
+    element={<UserManagement />}
+  />
+
+  <Route
+    path="categories"
+    element={<CategoryManagement />}
+  />
+
+  <Route
+    path="courses"
+    element={<CourseModeration />}
+  />
+
+  {/* Fase 4 */}
+  <Route
+    path="course-requests"
+    element={
+      <div className="simple-page">
+        <h1>Course Requests</h1>
+        <p>
+          Ask Course administration will be implemented
+          in Phase 4.
+        </p>
+      </div>
+    }
+  />
+
+  {/* Fase 4 */}
+  <Route
+    path="proposals"
+    element={
+      <div className="simple-page">
+        <h1>Instructor Proposals</h1>
+        <p>
+          Proposal moderation will be implemented
+          in Phase 4.
+        </p>
+      </div>
+    }
+  />
+</Route>
 
       </Routes>
     </BrowserRouter>
