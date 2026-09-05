@@ -7,6 +7,7 @@ const courseRoutes = require("./routes/course.routes");
 const sectionRoutes = require("./routes/section.routes");
 const lessonRoutes = require("./routes/lesson.routes")
 const enrollmentRoutes = require("./routes/enrollment.routes");
+const userRoutes = require("./routes/user.routes");
 
 const app = express();
 
@@ -33,6 +34,11 @@ app.get("/", (req, res) => {
 
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
+
+app.use(
+  "/api/admin/users",
+  userRoutes
+);
 
 app.use((req, res) => {
   res.status(404).json({
