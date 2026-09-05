@@ -46,10 +46,13 @@ const CourseCard = ({ course }) => {
 
         <button
           type="button"
-          onClick={handleViewCourse}
+          onClick={() =>
+            navigate(`/student/courses/${course.id}`)
+          }
         >
           View Course
         </button>
+
       </div>
     </article>
   );

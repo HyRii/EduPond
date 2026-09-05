@@ -1,10 +1,15 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
-import CourseCatalog from "../pages/student/CourseCatalog";
+
+
 import Login from "../pages/auth/Login";
 import LogoutButton from "../components/common/LogoutButton";
 import RegisterStudent from "../pages/auth/RegisterStudent";
 import RegisterInstructor from "../pages/auth/RegisterInstructor";
+
+//COURSE//
+import CourseCatalog from "../pages/student/CourseCatalog";
+import CourseDetail from "../pages/student/CourseDetail";
 
 const AppRouter = () => {
   return (
@@ -106,6 +111,15 @@ const AppRouter = () => {
       <p>
           Your Courses
         </p>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/student/courses/:id"
+  element={
+    <ProtectedRoute allowedRoles={["STUDENT"]}>
+      <CourseDetail />
     </ProtectedRoute>
   }
 />
