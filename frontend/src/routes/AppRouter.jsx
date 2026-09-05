@@ -19,6 +19,13 @@ import UserManagement from "../pages/admin/UserManagement";
 import CategoryManagement from "../pages/admin/CategoryManagement";
 import CourseModeration from "../pages/admin/CourseModeration";
 
+//INSTRUCTOR
+import InstructorLayout from "../layouts/InstructorLayout";
+import InstructorHome from "../pages/instructor/InstructorHome";
+import InstructorCourses from "../pages/instructor/InstructorCourses";
+import CourseForm from "../pages/instructor/CourseForm";
+import CourseBuilder from "../pages/instructor/CourseBuilder";
+
 const AppRouter = () => {
   return (
     <BrowserRouter>
@@ -148,19 +155,38 @@ const AppRouter = () => {
 <Route
   path="/instructor"
   element={
-    <ProtectedRoute allowedRoles={["INSTRUCTOR"]}>
-      <div className="simple-page">
-        <h1>Instructor Dashboard</h1>
-
-        <p>
-          Welcome to EduPond, Instructor.
-        </p>
-
-        <LogoutButton />
-      </div>
+    <ProtectedRoute
+      allowedRoles={["INSTRUCTOR"]}
+    >
+      <InstructorLayout />
     </ProtectedRoute>
   }
-/>
+>
+  <Route
+    index
+    element={<InstructorHome />}
+  />
+
+  <Route
+    path="courses"
+    element={<InstructorCourses />}
+  />
+
+  <Route
+    path="courses/new"
+    element={<CourseForm />}
+  />
+
+  <Route
+    path="courses/:id/edit"
+    element={<CourseForm />}
+  />
+
+  <Route
+    path="courses/:id/builder"
+    element={<CourseBuilder />}
+  />
+</Route>
 
 {/* ==================== */}
 {/* ADMIN */}
