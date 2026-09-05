@@ -10,6 +10,7 @@ import RegisterInstructor from "../pages/auth/RegisterInstructor";
 //COURSE//
 import CourseCatalog from "../pages/student/CourseCatalog";
 import CourseDetail from "../pages/student/CourseDetail";
+import MyCourses from "../pages/student/MyCourses";
 
 const AppRouter = () => {
   return (
@@ -120,6 +121,15 @@ const AppRouter = () => {
   element={
     <ProtectedRoute allowedRoles={["STUDENT"]}>
       <CourseDetail />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/student/my-courses"
+  element={
+    <ProtectedRoute allowedRoles={["STUDENT"]}>
+      <MyCourses />
     </ProtectedRoute>
   }
 />
