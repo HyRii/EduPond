@@ -8,9 +8,16 @@ import {
   useParams,
 } from "react-router-dom";
 
+// EDITED (Phase 3C fix): this file used to import { getQuiz,
+// submitQuizAttempt } from quiz.service.js, but that service module has
+// never exported functions with those names -- it exports getQuizById and
+// submitAttempt (see frontend/src/services/quiz.service.js). Calling this
+// page would throw "getQuiz is not a function" the moment it tried to load.
+// Fixed by importing the names that actually exist and renaming the local
+// usages below to match.
 import {
-  getQuiz,
-  submitQuizAttempt,
+  getQuizById,
+  submitAttempt as submitQuizAttemptRequest,
 } from "../../services/quiz.service";
 
 const QuizAttempt = () => {
@@ -50,8 +57,9 @@ const QuizAttempt = () => {
         setLoading(true);
         setError("");
 
+        // EDITED (Phase 3C fix): was getQuiz(quizId) (undefined function).
         const response =
-          await getQuiz(
+          await getQuizById(
             quizId
           );
 
@@ -110,11 +118,30 @@ const QuizAttempt = () => {
         setSubmitting(true);
         setError("");
 
+        // EDITED (Phase 3C fix): `answers` is kept in local state as a
+        // { [questionId]: optionId } map (convenient for the radio inputs
+        // below), but the backend's POST /quizzes/:id/attempts endpoint
+        // expects an array of { questionId, optionId } pairs (see
+        // backend/src/controllers/quiz.controller.js -> submitAttempt and
+        // backend/src/services/quiz.service.js -> submitAttempt, which
+        // builds its answerMap by reading answer.questionId /
+        // answer.optionId off each array item). Previously the raw object
+        // was sent as-is, which the backend would just read as an empty
+        // answer set. Convert to the array shape here before sending.
+        const answersPayload = Object.entries(
+          answers
+        ).map(
+          ([questionId, optionId]) => ({
+            questionId: Number(questionId),
+            optionId: Number(optionId),
+          })
+        );
+
         const response =
-          await submitQuizAttempt(
+          await submitQuizAttemptRequest(
             quiz.id,
             enrollmentId,
-            answers
+            answersPayload
           );
 
         setResult(

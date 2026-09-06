@@ -19,6 +19,11 @@ import MyCourses from "../pages/student/MyCourses";
 // below -- the route still rendered a "Phase 2" placeholder instead
 // of this component. Fixed below.
 import CourseLearn from "../pages/student/CourseLearn";
+// EDITED (Phase 3C): QuizAttempt.jsx already existed (and CourseLearn.jsx's
+// "Take Quiz" button already linked to /student/quizzes/:quizId/:enrollmentId)
+// but the route itself was never registered below, so that link 404'd via
+// the catch-all route. Added here together with the matching <Route>.
+import QuizAttempt from "../pages/student/QuizAttempt";
 
 import StudentLayout from "../layouts/StudentLayout";
 import InstructorLayout from "../layouts/InstructorLayout";
@@ -129,6 +134,17 @@ const AppRouter = () => (
         <Route
           path="my-courses/:enrollmentId"
           element={<CourseLearn />}
+        />
+
+        {/*
+          NEW (Phase 3C): matches the URL CourseLearn.jsx already builds
+          (`/student/quizzes/${quiz.id}/${enrollmentId}`) for its
+          "Take Quiz" button. QuizAttempt.jsx reads quizId/enrollmentId
+          from useParams() using these exact names.
+        */}
+        <Route
+          path="quizzes/:quizId/:enrollmentId"
+          element={<QuizAttempt />}
         />
 
         <Route
