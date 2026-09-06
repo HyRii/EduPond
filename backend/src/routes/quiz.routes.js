@@ -1,3 +1,4 @@
+// EDITED (Phase 3D): Added GET retry-status route for failed quiz cooldown.
 const express = require("express");
 
 const {
@@ -6,6 +7,7 @@ const {
   createOption,
   getQuiz,
   getQuizForLesson,
+  getRetryStatus,
   submitAttempt,
   getAttempts,
 } = require("../controllers/quiz.controller");
@@ -66,6 +68,13 @@ router.post(
   authenticate,
   authorize("STUDENT"),
   submitAttempt
+);
+
+router.get(
+  "/quizzes/:id/retry-status",
+  authenticate,
+  authorize("STUDENT"),
+  getRetryStatus
 );
 
 router.get(

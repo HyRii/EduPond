@@ -1,3 +1,4 @@
+// EDITED (Phase 3D): Added retry-status endpoint and 429 cooldown response.
 const quizService = require("../services/quiz.service");
 
 const createQuiz = async (
@@ -315,6 +316,36 @@ const getQuizForLesson = async (
   }
 };
 
+// NEW (Phase 3D): Student endpoint for checking the one-hour retry cooldown.
+const getRetryStatus = async (req, res, next) => {
+  try {
+    const enrollmentId = Number(req.query.enrollmentId);
+
+    if (!Number.isInteger(enrollmentId) || enrollmentId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "enrollmentId query parameter is required",
+      });
+    }
+
+    const status = await quizService.getRetryStatus(
+      req.params.id,
+      enrollmentId,
+      req.user.id
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Quiz retry status retrieved successfully",
+      data: {
+        retry: status,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const submitAttempt = async (
   req,
   res,
@@ -361,6 +392,17 @@ const submitAttempt = async (
       },
     });
   } catch (error) {
+    if (error.statusCode === 429) {
+      return res.status(429).json({
+        success: false,
+        message: error.message,
+        errors: {
+          retryAvailableAt: error.retryAvailableAt,
+        },
+        retryAvailableAt: error.retryAvailableAt,
+      });
+    }
+
     next(error);
   }
 };
@@ -397,6 +439,7 @@ module.exports = {
   createOption,
   getQuiz,
   getQuizForLesson,
+  getRetryStatus,
   submitAttempt,
   getAttempts,
 };

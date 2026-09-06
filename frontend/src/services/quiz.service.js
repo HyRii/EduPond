@@ -80,3 +80,13 @@ export const getQuizAttempts =
       `/quizzes/${quizId}/attempts`
     );
   };
+
+// NEW (Phase 3D): Read the one-hour retry cooldown before showing the quiz form.
+export const getRetryStatus = async (
+  quizId,
+  enrollmentId
+) => {
+  return apiRequest(
+    `/quizzes/${quizId}/retry-status?enrollmentId=${enrollmentId}`
+  );
+};

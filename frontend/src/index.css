@@ -1,3 +1,4 @@
+/* EDITED (Phase 3D): Added certificate preview and quiz cooldown styles. */
 * {
   box-sizing: border-box;
 }
@@ -1601,4 +1602,87 @@ input {
   font-size: 2.25rem;
   display: block;
   margin-bottom: 4px;
+}
+
+
+/* ============================= */
+/* PHASE 3D — CERTIFICATE */
+/* ============================= */
+
+.student-certificate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.student-certificate-card,
+.certificate-preview-card,
+.quiz-cooldown-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.certificate-thumbnail {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-bottom: 1px solid #ddd;
+}
+
+.certificate-card-body {
+  padding: 22px;
+}
+
+.certificate-card-body h2 {
+  margin-top: 0;
+}
+
+.certificate-card-body a {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  text-decoration: none;
+}
+
+.certificate-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 24px 0;
+}
+
+.certificate-preview-card {
+  padding: 16px;
+}
+
+.certificate-full-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.quiz-cooldown-card {
+  margin-bottom: 20px;
+  padding: 20px;
+}
+
+.quiz-cooldown-card h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 800px) {
+  .student-certificate-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .certificate-detail-header {
+    flex-direction: column;
+  }
 }

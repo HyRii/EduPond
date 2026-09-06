@@ -1,4 +1,8 @@
 const pool = require("../config/database");
+// EDITED (Phase 3D): Certificate issuance is triggered immediately after a passing quiz.
+const { issueCertificateIfEligible } = require("./certificate.service");
+
+const QUIZ_RETRY_COOLDOWN_MS = 60 * 60 * 1000;
 
 const getLessonForInstructor = async (
   lessonId,
@@ -535,6 +539,66 @@ const getStudentEnrollmentForQuiz = async (
   return rows[0];
 };
 
+const getRetryStatus = async (
+  quizId,
+  enrollmentId,
+  studentId
+) => {
+  await getStudentEnrollmentForQuiz(
+    quizId,
+    enrollmentId,
+    studentId
+  );
+
+  const [rows] = await pool.execute(
+    `
+      SELECT
+        id,
+        score,
+        passed,
+        attempted_at
+      FROM quiz_attempts
+      WHERE quiz_id = ?
+        AND enrollment_id = ?
+      ORDER BY attempted_at DESC, id DESC
+      LIMIT 1
+    `,
+    [quizId, enrollmentId]
+  );
+
+  if (rows.length === 0) {
+    return {
+      can_attempt: true,
+      cooldown_active: false,
+      retry_available_at: null,
+      last_attempt: null,
+    };
+  }
+
+  const lastAttempt = rows[0];
+  const lastAttemptTime = new Date(lastAttempt.attempted_at).getTime();
+  const retryAvailableAt = new Date(
+    lastAttemptTime + QUIZ_RETRY_COOLDOWN_MS
+  );
+  const cooldownActive =
+    !Boolean(lastAttempt.passed) &&
+    Date.now() < retryAvailableAt.getTime();
+
+  return {
+    can_attempt: !cooldownActive,
+    cooldown_active: cooldownActive,
+    retry_available_at: cooldownActive
+      ? retryAvailableAt.toISOString()
+      : null,
+    last_attempt: {
+      id: lastAttempt.id,
+      score: Number(lastAttempt.score),
+      passed: Boolean(lastAttempt.passed),
+      attempted_at: lastAttempt.attempted_at,
+    },
+  };
+};
+
 const submitAttempt = async (
   quizId,
   enrollmentId,
@@ -546,6 +610,22 @@ const submitAttempt = async (
     enrollmentId,
     studentId
   );
+
+  // EDITED (Phase 3D): A failed attempt starts a one-hour retry cooldown.
+  const retryStatus = await getRetryStatus(
+    quizId,
+    enrollmentId,
+    studentId
+  );
+
+  if (retryStatus.cooldown_active) {
+    const error = new Error(
+      "You did not pass the quiz. You can retry one hour after your last failed attempt."
+    );
+    error.statusCode = 429;
+    error.retryAvailableAt = retryStatus.retry_available_at;
+    throw error;
+  }
 
   const [questions] = await pool.execute(
     `
@@ -689,6 +769,17 @@ const submitAttempt = async (
 
     await connection.commit();
 
+    let certificate = null;
+
+    // EDITED (Phase 3D): Passing a quiz now triggers the same eligibility
+    // check used by lesson completion. The certificate service runs after
+    // this transaction has committed.
+    if (passed) {
+      certificate = await issueCertificateIfEligible(
+        enrollmentId
+      );
+    }
+
     return {
       id: result.insertId,
       quiz_id: Number(quizId),
@@ -700,6 +791,7 @@ const submitAttempt = async (
         passingScore,
       total_points: totalPoints,
       earned_points: earnedPoints,
+      certificate,
     };
   } catch (error) {
     await connection.rollback();
@@ -780,5 +872,6 @@ module.exports = {
   getQuizById,
   getQuizByLessonId,
   submitAttempt,
+  getRetryStatus,
   getAttempts,
 };

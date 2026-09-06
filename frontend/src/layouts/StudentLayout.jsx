@@ -52,9 +52,17 @@ const StudentLayout = () => {
             Ask Course
           </span>
 
-          <span className="student-nav-link disabled">
+          {/* EDITED (Phase 3D): Certificates are now available. */}
+          <NavLink
+            to="/student/certificates"
+            className={({ isActive }) =>
+              isActive
+                ? "student-nav-link active"
+                : "student-nav-link"
+            }
+          >
             Certificates
-          </span>
+          </NavLink>
 
         </nav>
 

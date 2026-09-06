@@ -26,3 +26,8 @@ build/
 
 # Coverage
 coverage/
+
+# Generated certificate images
+uploads/certificates/*.jpg
+uploads/certificates/*.jpeg
+!uploads/certificates/.gitkeep

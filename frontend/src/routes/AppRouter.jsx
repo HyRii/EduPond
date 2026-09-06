@@ -24,6 +24,8 @@ import CourseLearn from "../pages/student/CourseLearn";
 // but the route itself was never registered below, so that link 404'd via
 // the catch-all route. Added here together with the matching <Route>.
 import QuizAttempt from "../pages/student/QuizAttempt";
+import Certificates from "../pages/student/Certificates";
+import CertificateDetail from "../pages/student/CertificateDetail";
 
 import StudentLayout from "../layouts/StudentLayout";
 import InstructorLayout from "../layouts/InstructorLayout";
@@ -160,17 +162,15 @@ const AppRouter = () => (
           }
         />
 
+        {/* EDITED (Phase 3D): Certificate pages now use the generated JPEG. */}
         <Route
           path="certificates"
-          element={
-            <section>
-              <h1>Certificates</h1>
+          element={<Certificates />}
+        />
 
-              <p>
-                Certificates will be implemented in Phase 3.
-              </p>
-            </section>
-          }
+        <Route
+          path="certificates/:id"
+          element={<CertificateDetail />}
         />
       </Route>
 

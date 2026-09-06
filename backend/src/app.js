@@ -18,11 +18,15 @@ const app = express();
 app.use(
   cors({
     origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    // EDITED (Phase 3D): PATCH is needed by later roadmap phases.
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true
   })
 );
 app.use(express.json());
+
+// EDITED (Phase 3D): Serve generated certificate JPEG files.
+app.use("/uploads", express.static(require("path").resolve(__dirname, "../uploads")));
 app.use("/api/categories", categoryRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api", sectionRoutes);
