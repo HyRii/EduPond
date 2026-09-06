@@ -14,6 +14,11 @@ import RegisterInstructor from "../pages/auth/RegisterInstructor";
 import CourseCatalog from "../pages/student/CourseCatalog";
 import CourseDetail from "../pages/student/CourseDetail";
 import MyCourses from "../pages/student/MyCourses";
+// NEW (Phase 3B): CourseLearn.jsx already existed (built for the
+// lesson-progress work) but was never imported/wired into the router
+// below -- the route still rendered a "Phase 2" placeholder instead
+// of this component. Fixed below.
+import CourseLearn from "../pages/student/CourseLearn";
 
 import StudentLayout from "../layouts/StudentLayout";
 import InstructorLayout from "../layouts/InstructorLayout";
@@ -113,17 +118,17 @@ const AppRouter = () => (
           element={<MyCourses />}
         />
 
+        {/*
+          EDITED (Phase 3B): this route used to render an inline
+          placeholder ("Lesson progress will be implemented in
+          Phase 2.") even though CourseLearn.jsx -- the full lesson
+          player with progress tracking and, as of this phase, the
+          full-screen reader -- already existed and was already being
+          linked to from MyCourses.jsx. It just wasn't wired in here.
+        */}
         <Route
           path="my-courses/:enrollmentId"
-          element={
-            <section>
-              <h1>Course Learning</h1>
-
-              <p>
-                Lesson progress will be implemented in Phase 2.
-              </p>
-            </section>
-          }
+          element={<CourseLearn />}
         />
 
         <Route

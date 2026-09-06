@@ -487,6 +487,60 @@ const CourseLearn = () => {
         .progress_percentage || 0
     );
 
+  /*
+   * NEW (Phase 3B):
+   * Find the lesson (and its parent section, for the breadcrumb)
+   * that is currently open, so it can be rendered as a full-screen
+   * reader instead of an inline card. `sections` is nested
+   * (section -> lessons), so it needs a small search rather than a
+   * plain lookup by id.
+   */
+  const openLessonId_num =
+    Number(openLessonId);
+
+  let openLesson = null;
+  let openLessonSection = null;
+
+  if (openLessonId) {
+
+    for (const section of sections) {
+
+      const match =
+        section.lessons.find(
+          (lesson) =>
+            Number(lesson.id) ===
+            openLessonId_num
+        );
+
+      if (match) {
+        openLesson = match;
+        openLessonSection = section;
+        break;
+      }
+
+    }
+
+  }
+
+  const isOpenLessonCompleted =
+    completedLessons.has(
+      openLessonId_num
+    );
+
+  const canCompleteOpenLesson =
+    lessonReady.has(
+      openLessonId_num
+    );
+
+  const isCompletingOpenLesson =
+    Number(completingLessonId) ===
+    openLessonId_num;
+
+  const openLessonQuiz =
+    lessonQuizzes[
+      openLessonId_num
+    ];
+
   return (
     <section className="student-page">
 
@@ -654,21 +708,17 @@ const CourseLearn = () => {
                       openLessonId ===
                       lessonId;
 
-                    const canComplete =
-                      lessonReady.has(
-                        lessonId
-                      );
-
-                    const isCompleting =
-                      Number(
-                        completingLessonId
-                      ) ===
-                      lessonId;
-
-                    const quiz =
-                      lessonQuizzes[
-                        lessonId
-                      ];
+                    /*
+                     * EDITED (Phase 3B): canComplete / isCompleting /
+                     * quiz used to be computed here too, for the old
+                     * inline "lesson-learning-area" card. That card
+                     * is gone (the reader is now the full-screen
+                     * overlay below), and the overlay uses its own
+                     * equivalents (canCompleteOpenLesson,
+                     * isCompletingOpenLesson, openLessonQuiz,
+                     * computed near `progress`), so those three are
+                     * no longer needed in this per-lesson-card scope.
+                     */
 
                     return (
                       <article
@@ -741,8 +791,18 @@ const CourseLearn = () => {
                                   )
                                 }
                               >
+                                {/*
+                                  EDITED (Phase 3B): this button now
+                                  always opens the full-screen reader
+                                  (see lesson-fullscreen-overlay
+                                  below). Closing happens from the
+                                  "← Back to Course" button inside
+                                  that overlay, not by clicking this
+                                  button again, so the previous
+                                  "Close Lesson" toggle label is gone.
+                                */}
                                 {isOpen
-                                  ? "Close Lesson"
+                                  ? "Continue Lesson"
                                   : "Open Lesson"}
                               </button>
 
@@ -752,291 +812,24 @@ const CourseLearn = () => {
 
                         </div>
 
-                        {isOpen && (
-
-                          <div className="lesson-learning-area">
-
-                            <div
-                              className="lesson-content-scroll"
-                              onScroll={(event) =>
-                                handleLessonScroll(
-                                  event,
-                                  lessonId
-                                )
-                              }
-                            >
-
-                              <div className="lesson-content">
-
-                                {lesson.description && (
-
-                                  <div className="lesson-description">
-
-                                    <h4>
-                                      About this lesson
-                                    </h4>
-
-                                    <p>
-                                      {
-                                        lesson.description
-                                      }
-                                    </p>
-
-                                  </div>
-
-                                )}
-
-                                {lesson.content_type ===
-                                  "VIDEO" &&
-                                  lesson.content_url && (
-
-                                    <div className="lesson-video">
-
-                                      <h4>
-                                        Learning Material
-                                      </h4>
-
-                                      <video
-                                        controls
-                                        width="100%"
-                                      >
-
-                                        <source
-                                          src={
-                                            lesson.content_url
-                                          }
-                                        />
-
-                                        Your browser does not
-                                        support video playback.
-
-                                      </video>
-
-                                    </div>
-
-                                  )}
-
-                                {lesson.content_type ===
-                                  "ARTICLE" && (
-
-                                    <div className="lesson-article">
-
-                                      <h4>
-                                        Article
-                                      </h4>
-
-                                      {lesson.content_url ? (
-
-                                        <a
-                                          href={
-                                            lesson.content_url
-                                          }
-                                          target="_blank"
-                                          rel="noreferrer"
-                                        >
-                                          Open Article
-                                        </a>
-
-                                      ) : (
-
-                                        <p>
-                                          No article URL
-                                          has been provided.
-                                        </p>
-
-                                      )}
-
-                                    </div>
-
-                                  )}
-
-                                {lesson.content_type ===
-                                  "DOCUMENT" && (
-
-                                    <div className="lesson-document">
-
-                                      <h4>
-                                        Document
-                                      </h4>
-
-                                      {lesson.content_url ? (
-
-                                        <iframe
-                                          src={
-                                            lesson.content_url
-                                          }
-                                          title={
-                                            lesson.title
-                                          }
-                                          width="100%"
-                                          height="500"
-                                        />
-
-                                      ) : (
-
-                                        <p>
-                                          No document URL
-                                          has been provided.
-                                        </p>
-
-                                      )}
-
-                                    </div>
-
-                                  )}
-
-                                {lesson.content_type ===
-                                  "LINK" && (
-
-                                    <div className="lesson-link">
-
-                                      <h4>
-                                        Learning Material
-                                      </h4>
-
-                                      {lesson.content_url ? (
-
-                                        <a
-                                          href={
-                                            lesson.content_url
-                                          }
-                                          target="_blank"
-                                          rel="noreferrer"
-                                        >
-                                          Open Learning Material
-                                        </a>
-
-                                      ) : (
-
-                                        <p>
-                                          No learning URL
-                                          has been provided.
-                                        </p>
-
-                                      )}
-
-                                    </div>
-
-                                  )}
-
-                                {lesson.resource_url && (
-
-                                  <div className="lesson-resource">
-
-                                    <h4>
-                                      Additional Resource
-                                    </h4>
-
-                                    <a
-                                      href={
-                                        lesson.resource_url
-                                      }
-                                      target="_blank"
-                                      rel="noreferrer"
-                                    >
-                                      Open Additional Resource
-                                    </a>
-
-                                  </div>
-
-                                )}
-
-                                <div className="lesson-reading-content">
-
-                                  <h4>
-                                    Lesson Completion
-                                  </h4>
-
-                                  <p>
-                                    Review the learning material
-                                    before completing this lesson.
-                                  </p>
-
-                                  <p>
-                                    Scroll all the way to the bottom
-                                    of this area to unlock the
-                                    completion button.
-                                  </p>
-
-                                </div>
-
-                                <div className="lesson-bottom-spacer">
-
-                                  <div className="lesson-end-marker">
-
-                                    <strong>
-                                      End of Lesson
-                                    </strong>
-
-                                    <p>
-                                      You have reached the end
-                                      of this lesson.
-                                    </p>
-
-                                  </div>
-
-                                </div>
-
-                              </div>
-
-                            </div>
-
-                            <div className="lesson-completion-area">
-
-                              {!canComplete && (
-
-                                <p className="completion-hint">
-                                  Scroll to the bottom of this
-                                  lesson to unlock
-                                  "Mark as Done".
-                                </p>
-
-                              )}
-
-                              {canComplete &&
-                                !isCompleted && (
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleComplete(
-                                      lessonId
-                                    )
-                                  }
-                                  disabled={
-                                    Boolean(
-                                      completingLessonId
-                                    )
-                                  }
-                                >
-                                  {isCompleting
-                                    ? "Saving..."
-                                    : "Mark as Done"}
-                                </button>
-
-                              )}
-
-                              {isCompleted &&
-                                quiz && (
-
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    navigate(
-                                      `/student/quizzes/${quiz.id}/${enrollmentId}`
-                                    )
-                                  }
-                                >
-                                  Take Quiz
-                                </button>
-
-                              )}
-
-                            </div>
-
-                          </div>
-
-                        )}
+                        {/*
+                          EDITED (Phase 3B):
+                          The lesson content used to render inline,
+                          right here, as a small expanding card inside
+                          the section list ("isOpen && (<div
+                          className="lesson-learning-area">...")).
+                          That's the "cuma card kecil" behaviour that
+                          was reported as a problem.
+
+                          The lesson reader is now a dedicated
+                          full-screen overlay (see the
+                          "lesson-fullscreen-overlay" block rendered
+                          near the bottom of this component, driven by
+                          the `openLesson` variable), so there is
+                          nothing to render inline here anymore.
+                          `isOpen` now only controls the label of the
+                          "Open Lesson" button below.
+                        */}
 
                       </article>
                     );
@@ -1052,6 +845,370 @@ const CourseLearn = () => {
         )}
 
       </div>
+
+      {/*
+        NEW (Phase 3B):
+        Full-screen lesson reader. Renders on top of everything else
+        (see .lesson-fullscreen-overlay in index.css) instead of the
+        old inline "lesson-learning-area" card, so opening a lesson
+        feels like opening a news article rather than expanding a
+        small card in a list. Content, scroll-to-complete, and the
+        completion/quiz actions are the same as before -- only the
+        layout changed, and `openLesson`/`openLessonSection` etc. are
+        computed above, near `progress`.
+      */}
+      {openLesson && (
+
+        <div className="lesson-fullscreen-overlay">
+
+          <div className="lesson-fullscreen-header">
+
+            <button
+              type="button"
+              className="back-button"
+              onClick={() =>
+                setOpenLessonId(null)
+              }
+            >
+              ← Back to Course
+            </button>
+
+            <span className="lesson-fullscreen-eyebrow">
+              {openLessonSection?.title}
+            </span>
+
+          </div>
+
+          <div
+            className="lesson-fullscreen-scroll"
+            onScroll={(event) =>
+              handleLessonScroll(
+                event,
+                openLessonId_num
+              )
+            }
+          >
+
+            <article className="lesson-fullscreen-article">
+
+              <p className="lesson-fullscreen-kicker">
+                {openLesson.content_type}
+
+                {openLesson.duration_minutes !=
+                  null &&
+                  ` • ${openLesson.duration_minutes} min`}
+
+                {openLesson.is_required &&
+                  " • Required"}
+              </p>
+
+              <h1>
+                {openLesson.title}
+              </h1>
+
+              {openLesson.description && (
+
+                <div className="lesson-description">
+
+                  <h4>
+                    About this lesson
+                  </h4>
+
+                  <p>
+                    {
+                      openLesson.description
+                    }
+                  </p>
+
+                </div>
+
+              )}
+
+              {openLesson.content_type ===
+                "VIDEO" &&
+                openLesson.content_url && (
+
+                  <div className="lesson-video">
+
+                    <h4>
+                      Learning Material
+                    </h4>
+
+                    <video
+                      controls
+                      width="100%"
+                    >
+
+                      <source
+                        src={
+                          openLesson.content_url
+                        }
+                      />
+
+                      Your browser does not
+                      support video playback.
+
+                    </video>
+
+                  </div>
+
+                )}
+
+              {openLesson.content_type ===
+                "ARTICLE" && (
+
+                  <div className="lesson-article">
+
+                    <h4>
+                      Article
+                    </h4>
+
+                    {openLesson.content_url ? (
+
+                      /*
+                       * EDITED (Phase 3B): an external article link
+                       * used to just open in a new tab. Now that the
+                       * lesson itself already renders full-screen
+                       * like a news article, it's embedded directly
+                       * in an iframe so the student can read it
+                       * without leaving the page (with the external
+                       * link kept as a fallback for sites that block
+                       * being framed).
+                       */
+                      <>
+                        <iframe
+                          src={
+                            openLesson.content_url
+                          }
+                          title={
+                            openLesson.title
+                          }
+                          width="100%"
+                          height="600"
+                        />
+
+                        <p>
+                          <a
+                            href={
+                              openLesson.content_url
+                            }
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Open in a new tab
+                          </a>
+                        </p>
+                      </>
+
+                    ) : (
+
+                      <p>
+                        No article URL
+                        has been provided.
+                      </p>
+
+                    )}
+
+                  </div>
+
+                )}
+
+              {openLesson.content_type ===
+                "DOCUMENT" && (
+
+                  <div className="lesson-document">
+
+                    <h4>
+                      Document
+                    </h4>
+
+                    {openLesson.content_url ? (
+
+                      <iframe
+                        src={
+                          openLesson.content_url
+                        }
+                        title={
+                          openLesson.title
+                        }
+                        width="100%"
+                        height="700"
+                      />
+
+                    ) : (
+
+                      <p>
+                        No document URL
+                        has been provided.
+                      </p>
+
+                    )}
+
+                  </div>
+
+                )}
+
+              {openLesson.content_type ===
+                "LINK" && (
+
+                  <div className="lesson-link">
+
+                    <h4>
+                      Learning Material
+                    </h4>
+
+                    {openLesson.content_url ? (
+
+                      <a
+                        href={
+                          openLesson.content_url
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Open Learning Material
+                      </a>
+
+                    ) : (
+
+                      <p>
+                        No learning URL
+                        has been provided.
+                      </p>
+
+                    )}
+
+                  </div>
+
+                )}
+
+              {openLesson.resource_url && (
+
+                <div className="lesson-resource">
+
+                  <h4>
+                    Additional Resource
+                  </h4>
+
+                  <a
+                    href={
+                      openLesson.resource_url
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open Additional Resource
+                  </a>
+
+                </div>
+
+              )}
+
+              <div className="lesson-reading-content">
+
+                <h4>
+                  Lesson Completion
+                </h4>
+
+                <p>
+                  Review the learning material
+                  before completing this lesson.
+                </p>
+
+                <p>
+                  Scroll all the way to the bottom
+                  of this page to unlock the
+                  completion button.
+                </p>
+
+              </div>
+
+              <div className="lesson-bottom-spacer">
+
+                <div className="lesson-end-marker">
+
+                  <strong>
+                    End of Lesson
+                  </strong>
+
+                  <p>
+                    You have reached the end
+                    of this lesson.
+                  </p>
+
+                </div>
+
+              </div>
+
+            </article>
+
+          </div>
+
+          <div className="lesson-completion-area lesson-fullscreen-completion-area">
+
+            {!canCompleteOpenLesson && (
+
+              <p className="completion-hint">
+                Scroll to the bottom of this
+                lesson to unlock
+                "Mark as Done".
+              </p>
+
+            )}
+
+            {canCompleteOpenLesson &&
+              !isOpenLessonCompleted && (
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleComplete(
+                    openLessonId_num
+                  )
+                }
+                disabled={
+                  Boolean(
+                    completingLessonId
+                  )
+                }
+              >
+                {isCompletingOpenLesson
+                  ? "Saving..."
+                  : "Mark as Done"}
+              </button>
+
+            )}
+
+            {isOpenLessonCompleted &&
+              openLessonQuiz && (
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigate(
+                    `/student/quizzes/${openLessonQuiz.id}/${enrollmentId}`
+                  )
+                }
+              >
+                Take Quiz
+              </button>
+
+            )}
+
+            {isOpenLessonCompleted &&
+              !openLessonQuiz && (
+
+              <span className="completed-label">
+                ✓ Lesson completed
+              </span>
+
+            )}
+
+          </div>
+
+        </div>
+
+      )}
 
     </section>
   );
