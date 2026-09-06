@@ -14,8 +14,9 @@ router.post(
   authenticate, authorize("INSTRUCTOR"), controller.addLesson
 );
 router.post("/course-proposals/:id/submit", authenticate, authorize("INSTRUCTOR"), controller.submitProposal);
-router.get("/course-proposals/:id", authenticate, authorize("INSTRUCTOR"), controller.getMyProposalDetail);
 router.get("/course-proposals/mine", authenticate, authorize("INSTRUCTOR"), controller.getMyProposals);
+router.get("/course-proposals/:id", authenticate, authorize("INSTRUCTOR"), controller.getMyProposalDetail);
+
 
 router.get("/admin/course-proposals", authenticate, authorize("ADMIN"), controller.listProposals);
 router.get("/admin/course-proposals/:id", authenticate, authorize("ADMIN"), controller.getProposalDetail);

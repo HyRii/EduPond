@@ -37,10 +37,16 @@ import InstructorCourses from "../pages/instructor/InstructorCourses";
 import CourseForm from "../pages/instructor/CourseForm";
 import CourseBuilder from "../pages/instructor/CourseBuilder";
 import QuizBuilder from "../pages/instructor/QuizBuilder";
+import CourseRequests from "../pages/instructor/CourseRequests";
+import ProposalForm from "../pages/instructor/ProposalForm";
+import MyProposals from "../pages/instructor/MyProposals";
 
 import UserManagement from "../pages/admin/UserManagement";
 import CategoryManagement from "../pages/admin/CategoryManagement";
 import CourseModeration from "../pages/admin/CourseModeration";
+import AskCourse from "../pages/student/AskCourse";
+import CourseRequestReview from "../pages/admin/CourseRequestReview";
+import ProposalReview from "../pages/admin/ProposalReview";
 
 const SimpleDashboard = ({ role }) => (
   <section>
@@ -149,18 +155,7 @@ const AppRouter = () => (
           element={<QuizAttempt />}
         />
 
-        <Route
-          path="course-requests"
-          element={
-            <section>
-              <h1>Ask Course</h1>
-
-              <p>
-                Ask Course will be implemented in Phase 4.
-              </p>
-            </section>
-          }
-        />
+        <Route path="course-requests" element={<AskCourse />} />
 
         {/* EDITED (Phase 3D): Certificate pages now use the generated JPEG. */}
         <Route
@@ -219,31 +214,10 @@ const AppRouter = () => (
           element={<QuizBuilder />}
         />
 
-        <Route
-          path="course-requests"
-          element={
-            <section>
-              <h1>Course Requests</h1>
-
-              <p>
-                Demand curation is part of Phase 4.
-              </p>
-            </section>
-          }
-        />
-
-        <Route
-          path="proposals"
-          element={
-            <section>
-              <h1>Proposals</h1>
-
-              <p>
-                Instructor proposals are part of Phase 4.
-              </p>
-            </section>
-          }
-        />
+        <Route path="course-requests" element={<CourseRequests />} />
+        <Route path="proposals" element={<MyProposals />} />
+        <Route path="proposals/new" element={<ProposalForm />} />
+        <Route path="proposals/:id/edit" element={<ProposalForm />} />
       </Route>
 
       {/* =========================
@@ -279,31 +253,8 @@ const AppRouter = () => (
           element={<CourseModeration />}
         />
 
-        <Route
-          path="course-requests"
-          element={
-            <section>
-              <h1>Course Requests</h1>
-
-              <p>
-                Ask Course curation is part of Phase 4.
-              </p>
-            </section>
-          }
-        />
-
-        <Route
-          path="proposals"
-          element={
-            <section>
-              <h1>Proposals</h1>
-
-              <p>
-                Proposal review is part of Phase 4.
-              </p>
-            </section>
-          }
-        />
+        <Route path="course-requests" element={<CourseRequestReview />} />
+        <Route path="proposals" element={<ProposalReview />} />
       </Route>
 
       {/* =========================
