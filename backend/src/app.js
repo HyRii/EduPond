@@ -12,6 +12,9 @@ const progressRoutes = require("./routes/progress.routes");
 const quizRoutes = require("./routes/quiz.routes");
 const certificateRoutes =
   require("./routes/certificate.routes");
+const courseRequestRoutes = require("./routes/courseRequest.routes");
+const proposalRoutes = require("./routes/proposal.routes");
+const errorMiddleware = require("./middleware/error.middleware");
 
 const app = express();
 
@@ -58,11 +61,18 @@ app.use(
   userRoutes
 );
 
+// EDITED (Phase 4): mount Ask Course and Instructor Proposal workflows.
+app.use("/api", courseRequestRoutes);
+app.use("/api", proposalRoutes);
+
 app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: "Route not found",
   });
 });
+
+// EDITED (Phase 4): centralized error handler is registered last.
+app.use(errorMiddleware);
 
 module.exports = app;
