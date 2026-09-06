@@ -11,6 +11,7 @@ import RegisterInstructor from "../pages/auth/RegisterInstructor";
 import CourseCatalog from "../pages/student/CourseCatalog";
 import CourseDetail from "../pages/student/CourseDetail";
 import MyCourses from "../pages/student/MyCourses";
+import CourseLearn from "../pages/student/CourseLearn";
 
 //ADMIN
 import AdminLayout from "../layouts/AdminLayout";
@@ -131,19 +132,9 @@ const AppRouter = () => {
     element={<MyCourses />}
   />
 
-  {/* Future Phase 2 */}
   <Route
     path="my-courses/:enrollmentId"
-    element={
-      <div className="simple-page">
-        <h1>Course Learning</h1>
-
-        <p>
-          Lesson progress will be implemented
-          in Phase 2.
-        </p>
-      </div>
-    }
+    element={<CourseLearn />}
   />
 
   {/* Future Phase 4 */}
@@ -175,6 +166,8 @@ const AppRouter = () => {
       </div>
     }
   />
+
+  
 
 </Route>
 
