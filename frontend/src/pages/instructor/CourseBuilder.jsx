@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 
 import SectionForm from "../../components/course/SectionForm";
 import LessonForm from "../../components/course/LessonForm";
@@ -23,14 +27,23 @@ import {
 } from "../../services/lesson.service";
 
 const CourseBuilder = () => {
-
   const { id } = useParams();
+  const navigate = useNavigate();
 
-  const [course, setCourse] =
+  const [course, setCourse] = useState(null);
+  const [sections, setSections] = useState([]);
+
+  const [editingSection, setEditingSection] =
     useState(null);
 
-  const [sections, setSections] =
-    useState([]);
+  const [editingLesson, setEditingLesson] =
+    useState(null);
+
+  const [addingSection, setAddingSection] =
+    useState(false);
+
+  const [addingLessonFor, setAddingLessonFor] =
+    useState(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -38,30 +51,22 @@ const CourseBuilder = () => {
   const [error, setError] =
     useState("");
 
-  const [showSectionForm, setShowSectionForm] =
-    useState(false);
-
-  const [editingSectionId, setEditingSectionId] =
-    useState(null);
-
-  const [addingLessonSectionId, setAddingLessonSectionId] =
-    useState(null);
-
-  const [editingLessonId, setEditingLessonId] =
-    useState(null);
-
   const loadBuilder = async () => {
-
     try {
-
       setLoading(true);
       setError("");
 
       const courseResponse =
         await getCourseById(id);
 
+      const sectionsResponse =
+        await getSectionsByCourseId(id);
+
       const courseData =
         courseResponse?.data?.course;
+
+      const rawSections =
+        sectionsResponse?.data?.sections || [];
 
       if (!courseData) {
         throw new Error(
@@ -69,18 +74,10 @@ const CourseBuilder = () => {
         );
       }
 
-      const sectionsResponse =
-        await getSectionsByCourseId(id);
-
-      const rawSections =
-        sectionsResponse?.data?.sections ||
-        [];
-
       const sectionsWithLessons =
         await Promise.all(
           rawSections.map(
             async (section) => {
-
               const lessonResponse =
                 await getLessonsBySectionId(
                   section.id
@@ -89,504 +86,447 @@ const CourseBuilder = () => {
               return {
                 ...section,
                 lessons:
-                  lessonResponse?.data
-                    ?.lessons || [],
+                  lessonResponse?.data?.lessons ||
+                  [],
               };
-
             }
           )
         );
 
       setCourse(courseData);
-      setSections(
-        sectionsWithLessons
-      );
-
-    } catch (error) {
-
+      setSections(sectionsWithLessons);
+    } catch (err) {
       setError(
-        error.message ||
-        "Failed to load course builder."
+        err.message ||
+          "Failed to load course builder."
       );
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
 
   useEffect(() => {
-
     loadBuilder();
-
   }, [id]);
 
-  const refresh = async () => {
-
-    await loadBuilder();
-
-    setShowSectionForm(false);
-    setEditingSectionId(null);
-    setAddingLessonSectionId(null);
-    setEditingLessonId(null);
-
-  };
-
-  const handleCreateSection = async (
-    data
-  ) => {
-
+  const runAction = async (action) => {
     try {
+      setError("");
 
-      await createSection(
-        id,
-        data
-      );
+      await action();
 
-      await refresh();
+      setEditingSection(null);
+      setEditingLesson(null);
+      setAddingSection(false);
+      setAddingLessonFor(null);
 
-    } catch (error) {
-
+      await loadBuilder();
+    } catch (err) {
       setError(
-        error.message ||
-        "Failed to create section."
+        err.message ||
+          "Action failed."
       );
-
     }
-
   };
 
-  const handleUpdateSection = async (
-    sectionId,
-    data
-  ) => {
-
-    try {
-
-      await updateSection(
-        sectionId,
-        data
-      );
-
-      await refresh();
-
-    } catch (error) {
-
-      setError(
-        error.message ||
-        "Failed to update section."
-      );
-
-    }
-
-  };
-
-  const handleDeleteSection = async (
-    sectionId
-  ) => {
-
-    const confirmed =
-      window.confirm(
-        "Delete this section and its lessons?"
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-
-      await deleteSection(
-        sectionId
-      );
-
-      await refresh();
-
-    } catch (error) {
-
-      setError(
-        error.message ||
-        "Failed to delete section."
-      );
-
-    }
-
-  };
-
-  const handleCreateLesson = async (
-    sectionId,
-    data
-  ) => {
-
-    try {
-
-      await createLesson(
-        sectionId,
-        data
-      );
-
-      await refresh();
-
-    } catch (error) {
-
-      setError(
-        error.message ||
-        "Failed to create lesson."
-      );
-
-    }
-
-  };
-
-  const handleUpdateLesson = async (
-    lessonId,
-    data
-  ) => {
-
-    try {
-
-      await updateLesson(
-        lessonId,
-        data
-      );
-
-      await refresh();
-
-    } catch (error) {
-
-      setError(
-        error.message ||
-        "Failed to update lesson."
-      );
-
-    }
-
-  };
-
-  const handleDeleteLesson = async (
-    lessonId
-  ) => {
-
-    const confirmed =
-      window.confirm(
-        "Delete this lesson?"
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-
-      await deleteLesson(
-        lessonId
-      );
-
-      await refresh();
-
-    } catch (error) {
-
-      setError(
-        error.message ||
-        "Failed to delete lesson."
-      );
-
-    }
-
-  };
+  const isLocked =
+    course?.status === "PENDING_REVIEW" ||
+    course?.status === "ARCHIVED";
 
   if (loading) {
-
     return (
-      <div className="instructor-loading">
-        Loading course builder...
-      </div>
+      <section className="instructor-page">
+        <div className="instructor-loading">
+          Loading course builder...
+        </div>
+      </section>
     );
-
   }
 
   if (!course) {
-
     return (
-      <div className="instructor-error">
-        {error || "Course not found."}
-      </div>
+      <section className="instructor-page">
+        <div className="instructor-error">
+          {error || "Course not found."}
+        </div>
+      </section>
     );
-
   }
 
   return (
     <section className="instructor-page">
-
+      {/* =========================
+          HEADER
+      ========================= */}
       <div className="instructor-page-header">
-
         <div>
-
           <p className="page-eyebrow">
             COURSE BUILDER
           </p>
 
-          <h1>
-            {course.title}
-          </h1>
+          <h1>{course.title}</h1>
 
           <p className="page-description">
-            Build the Section → Lesson structure of this course.
+            Build your course using sections,
+            lessons, and lesson quizzes.
           </p>
-
         </div>
 
-        <Link
-          to={`/instructor/courses/${id}/edit`}
-        >
-          Back to Course
-        </Link>
-
+        <div className="instructor-actions">
+          <Link
+            to={`/instructor/courses/${id}/edit`}
+          >
+            Back to Course
+          </Link>
+        </div>
       </div>
 
+      {/* =========================
+          ERROR
+      ========================= */}
       {error && (
         <div className="instructor-error">
           {error}
         </div>
       )}
 
-      <div className="builder-toolbar">
-
-        <button
-          type="button"
-          onClick={() =>
-            setShowSectionForm(true)
-          }
-        >
-          Add Section
-        </button>
-
-      </div>
-
-      {showSectionForm && (
-
-        <div className="builder-form-card">
-
-          <h2>
-            New Section
-          </h2>
-
-          <SectionForm
-            onSave={
-              handleCreateSection
-            }
-            onCancel={() =>
-              setShowSectionForm(
-                false
-              )
-            }
-          />
-
+      {/* =========================
+          REVIEW NOTICE
+      ========================= */}
+      {course.status ===
+        "PENDING_REVIEW" && (
+        <div className="instructor-info">
+          This course is currently waiting
+          for admin review. Editing is
+          temporarily disabled.
         </div>
-
       )}
 
-      {sections.length === 0 ? (
+      {course.status ===
+        "PUBLISHED" && (
+        <div className="instructor-info">
+          This course is published. Any
+          change to its sections or lessons
+          will return the course to
+          PENDING_REVIEW.
+        </div>
+      )}
 
-        <div className="builder-empty">
-          No sections yet. Add your first section.
+      {/* =========================
+          ADD SECTION
+      ========================= */}
+      <div
+        className="builder-toolbar"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "1rem",
+          marginBottom: "1.5rem",
+        }}
+      >
+        <div>
+          <strong>
+            {sections.length}
+          </strong>{" "}
+          {sections.length === 1
+            ? "section"
+            : "sections"}
         </div>
 
-      ) : (
+        {!isLocked && (
+          <button
+            type="button"
+            onClick={() =>
+              setAddingSection(true)
+            }
+          >
+            + Add Section
+          </button>
+        )}
+      </div>
 
-        <div className="builder-sections">
+      {/* =========================
+          SECTION FORM
+      ========================= */}
+      {addingSection && (
+        <div
+          style={{
+            marginBottom: "1.5rem",
+          }}
+        >
+          <SectionForm
+            onSave={(data) =>
+              runAction(() =>
+                createSection(
+                  id,
+                  data
+                )
+              )
+            }
+            onCancel={() =>
+              setAddingSection(false)
+            }
+          />
+        </div>
+      )}
 
-          {sections.map(
-            (section) => (
+      {/* =========================
+          EMPTY
+      ========================= */}
+      {sections.length === 0 && (
+        <div className="instructor-empty">
+          <h2>No sections yet</h2>
 
-              <article
-                key={section.id}
-                className="builder-section"
+          <p>
+            Create your first section to
+            start adding lessons.
+          </p>
+
+          {!isLocked && (
+            <button
+              type="button"
+              onClick={() =>
+                setAddingSection(true)
+              }
+            >
+              Create First Section
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* =========================
+          SECTIONS
+      ========================= */}
+      <div className="builder-list">
+        {sections.map(
+          (section) => (
+            <article
+              key={section.id}
+              className="builder-section"
+            >
+              {/* SECTION HEADER */}
+              <div
+                className="builder-section-header"
+                style={{
+                  display: "flex",
+                  justifyContent:
+                    "space-between",
+                  alignItems: "flex-start",
+                  gap: "1rem",
+                  marginBottom:
+                    "1rem",
+                }}
               >
+                <div>
+                  <p className="page-eyebrow">
+                    SECTION{" "}
+                    {section.sort_order}
+                  </p>
 
-                <div className="builder-section-header">
+                  <h2>
+                    {section.title}
+                  </h2>
 
-                  <div>
-
-                    <span className="builder-order">
-                      Section {section.sort_order}
-                    </span>
-
-                    <h2>
-                      {section.title}
-                    </h2>
-
+                  {section.description && (
                     <p>
-                      {section.description ||
-                        "No description."}
+                      {section.description}
                     </p>
-
-                  </div>
-
-                  <div className="builder-actions">
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setEditingSectionId(
-                          editingSectionId ===
-                            section.id
-                            ? null
-                            : section.id
-                        )
-                      }
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleDeleteSection(
-                          section.id
-                        )
-                      }
-                    >
-                      Delete
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAddingLessonSectionId(
-                          section.id
-                        )
-                      }
-                    >
-                      Add Lesson
-                    </button>
-
-                  </div>
-
+                  )}
                 </div>
 
-                {editingSectionId ===
-                  section.id && (
+                {!isLocked && (
+                  <div className="instructor-actions">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingSection(
+                          section
+                        )
+                      }
+                    >
+                      Edit Section
+                    </button>
 
-                  <div className="builder-form-card">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const confirmed =
+                          window.confirm(
+                            "Delete this section and all lessons inside it?"
+                          );
 
-                    <SectionForm
-                      section={section}
-                      onSave={(
-                        data
-                      ) =>
-                        handleUpdateSection(
+                        if (confirmed) {
+                          runAction(() =>
+                            deleteSection(
+                              section.id
+                            )
+                          );
+                        }
+                      }}
+                    >
+                      Delete Section
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAddingLessonFor(
+                          section.id
+                        )
+                      }
+                    >
+                      + Add Lesson
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* EDIT SECTION */}
+              {editingSection?.id ===
+                section.id && (
+                <div
+                  style={{
+                    marginBottom:
+                      "1rem",
+                  }}
+                >
+                  <SectionForm
+                    section={section}
+                    onSave={(data) =>
+                      runAction(() =>
+                        updateSection(
                           section.id,
                           data
                         )
-                      }
-                      onCancel={() =>
-                        setEditingSectionId(
-                          null
-                        )
-                      }
-                    />
+                      )
+                    }
+                    onCancel={() =>
+                      setEditingSection(
+                        null
+                      )
+                    }
+                  />
+                </div>
+              )}
 
-                  </div>
-
-                )}
-
-                {addingLessonSectionId ===
-                  section.id && (
-
-                  <div className="builder-form-card">
-
-                    <h3>
-                      New Lesson
-                    </h3>
-
-                    <LessonForm
-                      onSave={(
-                        data
-                      ) =>
-                        handleCreateLesson(
+              {/* ADD LESSON */}
+              {addingLessonFor ===
+                section.id && (
+                <div
+                  style={{
+                    marginBottom:
+                      "1rem",
+                  }}
+                >
+                  <LessonForm
+                    onSave={(data) =>
+                      runAction(() =>
+                        createLesson(
                           section.id,
                           data
                         )
-                      }
-                      onCancel={() =>
-                        setAddingLessonSectionId(
-                          null
-                        )
-                      }
-                    />
+                      )
+                    }
+                    onCancel={() =>
+                      setAddingLessonFor(
+                        null
+                      )
+                    }
+                  />
+                </div>
+              )}
 
-                  </div>
+              {/* LESSON COUNT */}
+              <div
+                style={{
+                  marginBottom:
+                    "0.75rem",
+                  fontSize:
+                    "0.9rem",
+                  opacity: 0.75,
+                }}
+              >
+                {section.lessons.length}{" "}
+                {section.lessons.length ===
+                1
+                  ? "lesson"
+                  : "lessons"}
+              </div>
 
-                )}
+              {/* LESSONS */}
+              <div className="lesson-list">
+                {section.lessons.map(
+                  (lesson) => (
+                    <article
+                      key={lesson.id}
+                      className="lesson-row"
+                    >
+                      <div
+                        style={{
+                          flex: 1,
+                        }}
+                      >
+                        <div>
+                          <span className="builder-order">
+                            Lesson{" "}
+                            {
+                              lesson.sort_order
+                            }
+                          </span>
 
-                <div className="builder-lessons">
+                          <h3>
+                            {
+                              lesson.title
+                            }
+                          </h3>
+                        </div>
 
-                  {section.lessons.length === 0 ? (
+                        {lesson.description && (
+                          <p>
+                            {
+                              lesson.description
+                            }
+                          </p>
+                        )}
 
-                    <p className="builder-empty">
-                      No lessons in this section yet.
-                    </p>
+                        <div className="lesson-meta">
+                          <span>
+                            {
+                              lesson.content_type
+                            }
+                          </span>
 
-                  ) : (
-
-                    section.lessons.map(
-                      (lesson) => (
-
-                        <div
-                          key={lesson.id}
-                          className="builder-lesson"
-                        >
-
-                          <div>
-
-                            <span className="builder-order">
-                              Lesson{" "}
-                              {lesson.sort_order}
-                            </span>
-
-                            <h3>
-                              {lesson.title}
-                            </h3>
-
-                            <div className="lesson-meta">
-
+                          {lesson.duration_minutes !==
+                            null &&
+                            lesson.duration_minutes !==
+                              undefined && (
                               <span>
-                                {lesson.content_type}
+                                {
+                                  lesson.duration_minutes
+                                }{" "}
+                                min
                               </span>
+                            )}
 
-                              <span>
-                                {lesson.is_required
-                                  ? "Required"
-                                  : "Optional"}
-                              </span>
+                          <span>
+                            {lesson.is_required
+                              ? "Required"
+                              : "Optional"}
+                          </span>
+                        </div>
+                      </div>
 
-                              {lesson.duration_minutes !=
-                                null && (
-                                <span>
-                                  {
-                                    lesson.duration_minutes
-                                  }{" "}
-                                  min
-                                </span>
-                              )}
-
-                            </div>
-
-                          </div>
-
-                          <div className="builder-actions">
-
+                      {/* LESSON ACTIONS */}
+                      <div className="instructor-actions">
+                        {!isLocked && (
+                          <>
                             <button
                               type="button"
                               onClick={() =>
-                                setEditingLessonId(
-                                  editingLessonId ===
-                                    lesson.id
-                                    ? null
-                                    : lesson.id
+                                setEditingLesson(
+                                  lesson
                                 )
                               }
                             >
@@ -595,61 +535,108 @@ const CourseBuilder = () => {
 
                             <button
                               type="button"
-                              onClick={() =>
-                                handleDeleteLesson(
-                                  lesson.id
-                                )
-                              }
+                              onClick={() => {
+                                const confirmed =
+                                  window.confirm(
+                                    "Delete this lesson?"
+                                  );
+
+                                if (
+                                  confirmed
+                                ) {
+                                  runAction(
+                                    () =>
+                                      deleteLesson(
+                                        lesson.id
+                                      )
+                                  );
+                                }
+                              }}
                             >
                               Delete
                             </button>
+                          </>
+                        )}
 
-                          </div>
+                        {/* QUIZ */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate(
+                              `/instructor/lessons/${lesson.id}/quiz`
+                            )
+                          }
+                        >
+                          Quiz
+                        </button>
+                      </div>
 
-                          {editingLessonId ===
-                            lesson.id && (
-
-                            <div className="builder-form-card full-width">
-
-                              <LessonForm
-                                lesson={lesson}
-                                onSave={(
+                      {/* EDIT LESSON */}
+                      {editingLesson?.id ===
+                        lesson.id && (
+                        <div
+                          className="full-width"
+                          style={{
+                            marginTop:
+                              "1rem",
+                            width: "100%",
+                          }}
+                        >
+                          <LessonForm
+                            lesson={lesson}
+                            onSave={(data) =>
+                              runAction(() =>
+                                updateLesson(
+                                  lesson.id,
                                   data
-                                ) =>
-                                  handleUpdateLesson(
-                                    lesson.id,
-                                    data
-                                  )
-                                }
-                                onCancel={() =>
-                                  setEditingLessonId(
-                                    null
-                                  )
-                                }
-                              />
-
-                            </div>
-
-                          )}
-
+                                )
+                              )
+                            }
+                            onCancel={() =>
+                              setEditingLesson(
+                                null
+                              )
+                            }
+                          />
                         </div>
+                      )}
+                    </article>
+                  )
+                )}
 
-                      )
-                    )
+                {section.lessons.length ===
+                  0 && (
+                  <div
+                    className="instructor-empty"
+                    style={{
+                      padding:
+                        "1rem",
+                    }}
+                  >
+                    <p>
+                      This section has
+                      no lessons yet.
+                    </p>
 
-                  )}
-
-                </div>
-
-              </article>
-
-            )
-          )}
-
-        </div>
-
-      )}
-
+                    {!isLocked && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAddingLessonFor(
+                            section.id
+                          )
+                        }
+                      >
+                        + Add First Lesson
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </article>
+          )
+        )}
+      </div>
     </section>
   );
 };

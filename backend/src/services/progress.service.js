@@ -1,17 +1,27 @@
-const pool = require("../config/database");
+const pool =
+  require("../config/database");
+
+const {
+  issueCertificateIfEligible,
+} = require("./certificate.service");
 
 const markLessonComplete = async (
   enrollmentId,
   lessonId,
   studentId
 ) => {
+
   const connection =
     await pool.getConnection();
 
   try {
+
     await connection.beginTransaction();
 
-    //ACTIVE ENROLLMENTS
+    /*
+     * 1. Pastikan enrollment memang
+     *    milik student yang sedang login.
+     */
     const [enrollments] =
       await connection.execute(
         `
@@ -31,33 +41,52 @@ const markLessonComplete = async (
         ]
       );
 
-    if (enrollments.length === 0) {
-      const error = new Error(
-        "Enrollment not found"
-      );
+    if (
+      enrollments.length === 0
+    ) {
+
+      const error =
+        new Error(
+          "Enrollment not found"
+        );
 
       error.statusCode = 404;
 
       throw error;
+
     }
 
     const enrollment =
       enrollments[0];
 
+    /*
+     * Hanya enrollment ACTIVE yang
+     * boleh menambah lesson progress.
+     *
+     * Setelah 100%, enrollment menjadi
+     * COMPLETED dan tidak bisa kembali
+     * ke ACTIVE.
+     */
     if (
       enrollment.status !==
       "ACTIVE"
     ) {
-      const error = new Error(
-        "Enrollment is not active"
-      );
+
+      const error =
+        new Error(
+          "Enrollment is not active"
+        );
 
       error.statusCode = 400;
 
       throw error;
+
     }
 
-    //LESSON IS ON THE COURSE THAT ENROLLED
+    /*
+     * 2. Pastikan lesson adalah bagian
+     *    dari course enrollment.
+     */
     const [lessons] =
       await connection.execute(
         `
@@ -78,17 +107,29 @@ const markLessonComplete = async (
         ]
       );
 
-    if (lessons.length === 0) {
-      const error = new Error(
-        "Lesson does not belong to this course"
-      );
+    if (
+      lessons.length === 0
+    ) {
+
+      const error =
+        new Error(
+          "Lesson does not belong to this course"
+        );
 
       error.statusCode = 400;
 
       throw error;
+
     }
 
-    //LESSON PROGRESS
+    /*
+     * 3. Simpan lesson progress.
+     *
+     * Unique constraint:
+     * enrollment_id + lesson_id
+     *
+     * membuat operation ini idempotent.
+     */
     await connection.execute(
       `
         INSERT INTO lesson_progress (
@@ -102,34 +143,24 @@ const markLessonComplete = async (
           ?,
           ?,
           'COMPLETED',
-          COALESCE(
-            (
-              SELECT started_at
-              FROM (
-                SELECT started_at
-                FROM lesson_progress
-                WHERE enrollment_id = ?
-                  AND lesson_id = ?
-                LIMIT 1
-              ) AS existing_progress
-            ),
-            CURRENT_TIMESTAMP
-          ),
+          CURRENT_TIMESTAMP,
           CURRENT_TIMESTAMP
         )
         ON DUPLICATE KEY UPDATE
           status = 'COMPLETED',
-          completed_at = CURRENT_TIMESTAMP
+          completed_at =
+            CURRENT_TIMESTAMP
       `,
       [
-        enrollmentId,
-        lessonId,
         enrollmentId,
         lessonId,
       ]
     );
 
-    // REQUIRED LESSON
+    /*
+     * 4. Total required lesson
+     *    pada course.
+     */
     const [totalRows] =
       await connection.execute(
         `
@@ -144,7 +175,10 @@ const markLessonComplete = async (
         [enrollment.course_id]
       );
 
-    //COMPLETED LESSON
+    /*
+     * 5. Required lesson yang
+     *    sudah completed.
+     */
     const [completedRows] =
       await connection.execute(
         `
@@ -178,6 +212,9 @@ const markLessonComplete = async (
           ?.completed_required || 0
       );
 
+    /*
+     * 6. Hitung progress percentage.
+     */
     const progressPercentage =
       totalRequired === 0
         ? 0
@@ -194,12 +231,16 @@ const markLessonComplete = async (
 
     let completedAt = null;
 
-    
+    /*
+     * 7. Kalau seluruh required lesson
+     *    selesai, tandai enrollment COMPLETED.
+     */
     if (
       totalRequired > 0 &&
       completedRequired >=
         totalRequired
     ) {
+
       completedAt =
         new Date();
 
@@ -211,36 +252,87 @@ const markLessonComplete = async (
           UPDATE enrollments
           SET
             status = 'COMPLETED',
-            completed_at = CURRENT_TIMESTAMP
+            completed_at =
+              CURRENT_TIMESTAMP
           WHERE id = ?
+            AND status = 'ACTIVE'
         `,
         [enrollmentId]
       );
+
     }
 
+    /*
+     * 8. Commit progress terlebih dahulu.
+     */
     await connection.commit();
 
-    return {
-      enrollmentId:
-        enrollmentId,
+    /*
+     * 9. Setelah progress berhasil
+     *    disimpan, cek certificate eligibility.
+     *
+     * Certificate service akan melakukan
+     * pengecekan:
+     * - progress 100%
+     * - certificate_enabled
+     * - quiz requirement
+     * - certificate belum pernah diterbitkan
+     */
+    let certificate = null;
 
-      lessonId:
-        lessonId,
+    try {
+
+      certificate =
+        await issueCertificateIfEligible(
+          enrollmentId
+        );
+
+    } catch (certificateError) {
+
+      /*
+       * Progress tetap dianggap berhasil.
+       *
+       * Certificate failure tidak boleh
+       * melakukan rollback terhadap
+       * lesson progress yang sudah committed.
+       *
+       * Error tetap dilempar agar API memberi
+       * tahu frontend bahwa ada masalah
+       * certificate generation.
+       */
+      throw certificateError;
+
+    }
+
+    return {
+      enrollmentId,
+      lessonId,
 
       progressPercentage,
 
       totalRequired,
-
       completedRequired,
 
       enrollmentStatus,
-
       completedAt,
+
+      certificate,
     };
 
   } catch (error) {
 
-    await connection.rollback();
+    /*
+     * Rollback hanya kalau transaction
+     * masih aktif.
+     */
+    try {
+      await connection.rollback();
+    } catch (rollbackError) {
+      console.error(
+        "Progress rollback error:",
+        rollbackError
+      );
+    }
 
     throw error;
 

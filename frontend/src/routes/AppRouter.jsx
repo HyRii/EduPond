@@ -1,280 +1,299 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
+
 import ProtectedRoute from "./ProtectedRoute";
 
-
 import Login from "../pages/auth/Login";
-import LogoutButton from "../components/common/LogoutButton";
 import RegisterStudent from "../pages/auth/RegisterStudent";
 import RegisterInstructor from "../pages/auth/RegisterInstructor";
 
-//COURSE//
 import CourseCatalog from "../pages/student/CourseCatalog";
 import CourseDetail from "../pages/student/CourseDetail";
 import MyCourses from "../pages/student/MyCourses";
-import CourseLearn from "../pages/student/CourseLearn";
 
-//ADMIN
+import StudentLayout from "../layouts/StudentLayout";
+import InstructorLayout from "../layouts/InstructorLayout";
 import AdminLayout from "../layouts/AdminLayout";
-import AdminHome from "../pages/admin/AdminHome";
+
+import LogoutButton from "../components/common/LogoutButton";
+
+import InstructorCourses from "../pages/instructor/InstructorCourses";
+import CourseForm from "../pages/instructor/CourseForm";
+import CourseBuilder from "../pages/instructor/CourseBuilder";
+import QuizBuilder from "../pages/instructor/QuizBuilder";
+
 import UserManagement from "../pages/admin/UserManagement";
 import CategoryManagement from "../pages/admin/CategoryManagement";
 import CourseModeration from "../pages/admin/CourseModeration";
 
-//INSTRUCTOR
-import InstructorLayout from "../layouts/InstructorLayout";
-import InstructorHome from "../pages/instructor/InstructorHome";
-import InstructorCourses from "../pages/instructor/InstructorCourses";
-import CourseForm from "../pages/instructor/CourseForm";
-import CourseBuilder from "../pages/instructor/CourseBuilder";
+const SimpleDashboard = ({ role }) => (
+  <section>
+    <h1>{role} Dashboard</h1>
+    <p>
+      The role-specific dashboard metrics will be completed in Phase 5.
+    </p>
 
-//STUDENT
-import StudentLayout from "../layouts/StudentLayout";
-import StudentHome from "../pages/student/StudentHome";
+    <LogoutButton />
+  </section>
+);
 
-const AppRouter = () => {
-  return (
-    <BrowserRouter>
-      <Routes>
+const AppRouter = () => (
+  <BrowserRouter>
+    <Routes>
+      {/* =========================
+          PUBLIC
+      ========================= */}
+      <Route
+        path="/"
+        element={<Navigate to="/login" replace />}
+      />
 
-        {/* ==================== */}
-        {/* PUBLIC */}
-        {/* ==================== */}
+      <Route
+        path="/login"
+        element={<Login />}
+      />
 
+      <Route
+        path="/register/student"
+        element={<RegisterStudent />}
+      />
+
+      <Route
+        path="/register/instructor"
+        element={<RegisterInstructor />}
+      />
+
+      <Route
+        path="/unauthorized"
+        element={
+          <section className="simple-page">
+            <h1>Unauthorized</h1>
+
+            <p>
+              You don't have permission to access this page.
+            </p>
+          </section>
+        }
+      />
+
+      {/* =========================
+          STUDENT
+      ========================= */}
+      <Route
+        path="/student"
+        element={
+          <ProtectedRoute allowedRoles={["STUDENT"]}>
+            <StudentLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route
-          path="/"
+          index
           element={
-            <div className="home-page">
-              <h1>EduPond</h1>
-
-              <p>
-                A pond of knowledge.
-              </p>
-
-              <p>
-                Full-Stack Education Platform.
-              </p>
-
-              <div className="home-actions">
-                <a href="/login">
-                  Login
-                </a>
-
-                <a href="/register/student">
-                  Join as Student
-                </a>
-
-                <a href="/register/instructor">
-                  Become an Instructor
-                </a>
-              </div>
-            </div>
+            <SimpleDashboard role="Student" />
           }
         />
 
         <Route
-          path="/login"
-          element={<Login />}
+          path="courses"
+          element={<CourseCatalog />}
         />
 
         <Route
-          path="/register/student"
-          element={<RegisterStudent />}
+          path="courses/:id"
+          element={<CourseDetail />}
         />
 
         <Route
-          path="/register/instructor"
-          element={<RegisterInstructor />}
+          path="my-courses"
+          element={<MyCourses />}
         />
 
         <Route
-          path="/unauthorized"
+          path="my-courses/:enrollmentId"
           element={
-            <div className="simple-page">
-              <h1>Unauthorized</h1>
+            <section>
+              <h1>Course Learning</h1>
+
               <p>
-                You don't have permission to access this page.
+                Lesson progress will be implemented in Phase 2.
               </p>
-            </div>
+            </section>
           }
         />
 
-{/* ==================== */}
-{/* STUDENT */}
-{/* ==================== */}
+        <Route
+          path="course-requests"
+          element={
+            <section>
+              <h1>Ask Course</h1>
 
-<Route
-  path="/student"
-  element={
-    <ProtectedRoute
-      allowedRoles={["STUDENT"]}
-    >
-      <StudentLayout />
-    </ProtectedRoute>
-  }
->
-  <Route
-    index
-    element={<StudentHome />}
-  />
+              <p>
+                Ask Course will be implemented in Phase 4.
+              </p>
+            </section>
+          }
+        />
 
-  <Route
-    path="courses"
-    element={<CourseCatalog />}
-  />
+        <Route
+          path="certificates"
+          element={
+            <section>
+              <h1>Certificates</h1>
 
-  <Route
-    path="courses/:id"
-    element={<CourseDetail />}
-  />
+              <p>
+                Certificates will be implemented in Phase 3.
+              </p>
+            </section>
+          }
+        />
+      </Route>
 
-  <Route
-    path="my-courses"
-    element={<MyCourses />}
-  />
+      {/* =========================
+          INSTRUCTOR
+      ========================= */}
+      <Route
+        path="/instructor"
+        element={
+          <ProtectedRoute allowedRoles={["INSTRUCTOR"]}>
+            <InstructorLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route
+          index
+          element={
+            <SimpleDashboard role="Instructor" />
+          }
+        />
 
-  <Route
-    path="my-courses/:enrollmentId"
-    element={<CourseLearn />}
-  />
+        <Route
+          path="courses"
+          element={<InstructorCourses />}
+        />
 
-  {/* Future Phase 4 */}
-  <Route
-    path="course-requests"
-    element={
-      <div className="simple-page">
-        <h1>Ask Course</h1>
+        <Route
+          path="courses/new"
+          element={<CourseForm />}
+        />
 
-        <p>
-          Ask Course will be implemented
-          in Phase 4.
-        </p>
-      </div>
-    }
-  />
+        <Route
+          path="courses/:id/edit"
+          element={<CourseForm />}
+        />
 
-  {/* Future Phase 3 */}
-  <Route
-    path="certificates"
-    element={
-      <div className="simple-page">
-        <h1>Certificates</h1>
+        {/* COURSE BUILDER */}
+        <Route
+          path="courses/:id/builder"
+          element={<CourseBuilder />}
+        />
 
-        <p>
-          Certificates will be implemented
-          in Phase 3.
-        </p>
-      </div>
-    }
-  />
+        {/* QUIZ BUILDER */}
+        <Route
+          path="lessons/:lessonId/quiz"
+          element={<QuizBuilder />}
+        />
 
-  
+        <Route
+          path="course-requests"
+          element={
+            <section>
+              <h1>Course Requests</h1>
 
-</Route>
+              <p>
+                Demand curation is part of Phase 4.
+              </p>
+            </section>
+          }
+        />
 
-{/* ==================== */}
-{/* INSTRUCTOR */}
-{/* ==================== */}
+        <Route
+          path="proposals"
+          element={
+            <section>
+              <h1>Proposals</h1>
 
-<Route
-  path="/instructor"
-  element={
-    <ProtectedRoute
-      allowedRoles={["INSTRUCTOR"]}
-    >
-      <InstructorLayout />
-    </ProtectedRoute>
-  }
->
-  <Route
-    index
-    element={<InstructorHome />}
-  />
+              <p>
+                Instructor proposals are part of Phase 4.
+              </p>
+            </section>
+          }
+        />
+      </Route>
 
-  <Route
-    path="courses"
-    element={<InstructorCourses />}
-  />
+      {/* =========================
+          ADMIN
+      ========================= */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route
+          index
+          element={
+            <SimpleDashboard role="Admin" />
+          }
+        />
 
-  <Route
-    path="courses/new"
-    element={<CourseForm />}
-  />
+        <Route
+          path="users"
+          element={<UserManagement />}
+        />
 
-  <Route
-    path="courses/:id/edit"
-    element={<CourseForm />}
-  />
+        <Route
+          path="categories"
+          element={<CategoryManagement />}
+        />
 
-  <Route
-    path="courses/:id/builder"
-    element={<CourseBuilder />}
-  />
-</Route>
+        <Route
+          path="courses"
+          element={<CourseModeration />}
+        />
 
-{/* ==================== */}
-{/* ADMIN */}
-{/* ==================== */}
+        <Route
+          path="course-requests"
+          element={
+            <section>
+              <h1>Course Requests</h1>
 
-<Route
-  path="/admin"
-  element={
-    <ProtectedRoute allowedRoles={["ADMIN"]}>
-      <AdminLayout />
-    </ProtectedRoute>
-  }
->
-  <Route
-    index
-    element={<AdminHome />}
-  />
+              <p>
+                Ask Course curation is part of Phase 4.
+              </p>
+            </section>
+          }
+        />
 
-  <Route
-    path="users"
-    element={<UserManagement />}
-  />
+        <Route
+          path="proposals"
+          element={
+            <section>
+              <h1>Proposals</h1>
 
-  <Route
-    path="categories"
-    element={<CategoryManagement />}
-  />
+              <p>
+                Proposal review is part of Phase 4.
+              </p>
+            </section>
+          }
+        />
+      </Route>
 
-  <Route
-    path="courses"
-    element={<CourseModeration />}
-  />
-
-  {/* Fase 4 */}
-  <Route
-    path="course-requests"
-    element={
-      <div className="simple-page">
-        <h1>Course Requests</h1>
-        <p>
-          Ask Course administration will be implemented
-          in Phase 4.
-        </p>
-      </div>
-    }
-  />
-
-  {/* Fase 4 */}
-  <Route
-    path="proposals"
-    element={
-      <div className="simple-page">
-        <h1>Instructor Proposals</h1>
-        <p>
-          Proposal moderation will be implemented
-          in Phase 4.
-        </p>
-      </div>
-    }
-  />
-</Route>
-
-      </Routes>
-    </BrowserRouter>
-  );
-};
+      {/* =========================
+          FALLBACK
+      ========================= */}
+      <Route
+        path="*"
+        element={<Navigate to="/login" replace />}
+      />
+    </Routes>
+  </BrowserRouter>
+);
 
 export default AppRouter;

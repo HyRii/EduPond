@@ -198,82 +198,194 @@ const updateCourse = async (
     certificateEnabled,
   }
 ) => {
-  const course = await getCourseById(courseId);
 
-if (userRole !== "ADMIN" && course.instructor_id !== userId) {
-  const error = new Error(
-    "You can only update your own course"
-  );
-  error.statusCode = 403;
-  throw error;
-}
+  const course =
+    await getCourseById(
+      courseId,
+      userId,
+      userRole
+    );
+
+  if (
+    userRole !== "ADMIN" &&
+    Number(course.instructor_id) !==
+      Number(userId)
+  ) {
+    const error = new Error(
+      "You can only update your own course"
+    );
+
+    error.statusCode = 403;
+
+    throw error;
+  }
+
+  /*
+   * Instructor hanya boleh melakukan
+   * perubahan pada DRAFT, REJECTED,
+   * atau PUBLISHED.
+   *
+   * PUBLISHED akan menjadi
+   * PENDING_REVIEW setelah perubahan.
+   */
+  if (
+    userRole === "INSTRUCTOR" &&
+    ![
+      "DRAFT",
+      "REJECTED",
+      "PUBLISHED",
+    ].includes(course.status)
+  ) {
+    const error = new Error(
+      "This course cannot be edited in its current state"
+    );
+
+    error.statusCode = 409;
+
+    throw error;
+  }
 
   if (categoryId !== undefined) {
-    const [categories] = await pool.execute(
-      `SELECT id
-       FROM categories
-       WHERE id = ?
-       AND status = 'ACTIVE'
-       LIMIT 1`,
-      [categoryId]
-    );
 
-    if (categories.length === 0) {
-      const error = new Error(
-        "Category not found or inactive"
+    const [categories] =
+      await pool.execute(
+        `
+          SELECT id
+          FROM categories
+          WHERE id = ?
+            AND status = 'ACTIVE'
+          LIMIT 1
+        `,
+        [categoryId]
       );
+
+    if (
+      categories.length === 0
+    ) {
+
+      const error =
+        new Error(
+          "Category not found or inactive"
+        );
+
       error.statusCode = 400;
+
       throw error;
+
     }
+
   }
 
-  if (slug && slug !== course.slug) {
-    const [existingCourses] = await pool.execute(
-      `SELECT id
-       FROM courses
-       WHERE slug = ?
-       AND id != ?
-       LIMIT 1`,
-      [slug, courseId]
-    );
+  if (
+    slug &&
+    slug !== course.slug
+  ) {
 
-    if (existingCourses.length > 0) {
-      const error = new Error(
-        "Course slug already exists"
+    const [existingCourses] =
+      await pool.execute(
+        `
+          SELECT id
+          FROM courses
+          WHERE slug = ?
+            AND id != ?
+          LIMIT 1
+        `,
+        [
+          slug,
+          courseId,
+        ]
       );
+
+    if (
+      existingCourses.length > 0
+    ) {
+
+      const error =
+        new Error(
+          "Course slug already exists"
+        );
+
       error.statusCode = 409;
+
       throw error;
+
     }
+
   }
+
+  /*
+   * Published + Instructor edit
+   * becomes Pending Review.
+   *
+   * Admin updates don't trigger this.
+   */
+  const nextStatus =
+    userRole === "INSTRUCTOR" &&
+    course.status ===
+      "PUBLISHED"
+      ? "PENDING_REVIEW"
+      : course.status;
 
   await pool.execute(
-    `UPDATE courses
-     SET
-       category_id = ?,
-       title = ?,
-       slug = ?,
-       description = ?,
-       goal = ?,
-       difficulty = ?,
-       duration_minutes = ?,
-       thumbnail_url = ?,
-       certificate_enabled = ?
-     WHERE id = ?`,
+    `
+      UPDATE courses
+      SET
+        category_id = ?,
+        title = ?,
+        slug = ?,
+        description = ?,
+        goal = ?,
+        difficulty = ?,
+        duration_minutes = ?,
+        thumbnail_url = ?,
+        certificate_enabled = ?,
+        status = ?
+      WHERE id = ?
+    `,
     [
-      categoryId ?? course.category_id,
-      title ?? course.title,
-      slug ?? course.slug,
-      description ?? course.description,
-      goal ?? course.goal,
-      difficulty ?? course.difficulty,
-      durationMinutes ?? course.duration_minutes,
-      thumbnailUrl ?? course.thumbnail_url,
-      certificateEnabled ?? course.certificate_enabled,
+      categoryId ??
+        course.category_id,
+
+      title ??
+        course.title,
+
+      slug ??
+        course.slug,
+
+      description !== undefined
+        ? description
+        : course.description,
+
+      goal !== undefined
+        ? goal
+        : course.goal,
+
+      difficulty ??
+        course.difficulty,
+
+      durationMinutes !== undefined
+        ? durationMinutes
+        : course.duration_minutes,
+
+      thumbnailUrl !== undefined
+        ? thumbnailUrl
+        : course.thumbnail_url,
+
+      certificateEnabled !== undefined
+        ? certificateEnabled
+        : course.certificate_enabled,
+
+      nextStatus,
+
       courseId,
     ]
   );
 
-  return getCourseById(courseId);
+  return getCourseById(
+    courseId,
+    userId,
+    userRole
+  );
 };
 
 const submitCourse = async (courseId, userId, userRole) => {

@@ -24,6 +24,10 @@ import {
   completeLesson,
 } from "../../services/progress.service";
 
+import {
+  getQuizByLessonId,
+} from "../../services/quiz.service";
+
 const CourseLearn = () => {
 
   const {
@@ -42,6 +46,9 @@ const CourseLearn = () => {
   const [completedLessons, setCompletedLessons] =
     useState(new Set());
 
+  const [lessonQuizzes, setLessonQuizzes] =
+    useState({});
+
   const [loading, setLoading] =
     useState(true);
 
@@ -59,9 +66,8 @@ const CourseLearn = () => {
     useState(null);
 
   /*
-   * Lesson yang sudah discroll sampai bottom.
-   * Lesson yang masuk Set ini baru boleh
-   * menampilkan tombol "Mark as Done".
+   * Lesson yang sudah discroll sampai
+   * bagian paling bawah.
    */
   const [lessonReady, setLessonReady] =
     useState(new Set());
@@ -73,6 +79,9 @@ const CourseLearn = () => {
       setLoading(true);
       setError("");
 
+      /*
+       * Ambil enrollment terlebih dahulu.
+       */
       const enrollmentResponse =
         await getEnrollmentById(
           enrollmentId
@@ -91,6 +100,9 @@ const CourseLearn = () => {
 
       }
 
+      /*
+       * Ambil semua section course.
+       */
       const sectionsResponse =
         await getSectionsByCourseId(
           enrollmentData.course_id
@@ -101,6 +113,9 @@ const CourseLearn = () => {
           ?.data
           ?.sections || [];
 
+      /*
+       * Ambil lesson untuk setiap section.
+       */
       const sectionsWithLessons =
         await Promise.all(
           rawSections.map(
@@ -124,6 +139,10 @@ const CourseLearn = () => {
           )
         );
 
+      /*
+       * Ambil lesson yang sudah completed
+       * dari enrollment.
+       */
       const progressIds =
         (
           enrollmentData.lesson_progress ||
@@ -141,6 +160,62 @@ const CourseLearn = () => {
               )
           );
 
+      /*
+       * Cari quiz untuk setiap lesson.
+       *
+       * Lesson tanpa quiz akan mendapatkan null.
+       */
+      const quizMap = {};
+
+      await Promise.all(
+        sectionsWithLessons.map(
+          async (section) => {
+
+            await Promise.all(
+              section.lessons.map(
+                async (lesson) => {
+
+                  try {
+
+                    const response =
+                      await getQuizByLessonId(
+                        lesson.id
+                      );
+
+                    quizMap[
+                      Number(
+                        lesson.id
+                      )
+                    ] =
+                      response
+                        ?.data
+                        ?.quiz ||
+                      null;
+
+                  } catch (error) {
+
+                    /*
+                     * Jangan membuat seluruh
+                     * halaman learning gagal
+                     * hanya karena sebuah lesson
+                     * tidak memiliki quiz.
+                     */
+                    quizMap[
+                      Number(
+                        lesson.id
+                      )
+                    ] = null;
+
+                  }
+
+                }
+              )
+            );
+
+          }
+        )
+      );
+
       setEnrollment(
         enrollmentData
       );
@@ -154,11 +229,16 @@ const CourseLearn = () => {
       );
 
       /*
-       * Lesson yang sudah completed tidak perlu
-       * melewati scroll requirement lagi.
+       * Lesson completed dianggap sudah ready
+       * sehingga student tidak perlu membuka
+       * dan scroll ulang.
        */
       setLessonReady(
         new Set(progressIds)
+      );
+
+      setLessonQuizzes(
+        quizMap
       );
 
     } catch (error) {
@@ -183,7 +263,7 @@ const CourseLearn = () => {
   }, [enrollmentId]);
 
   /*
-   * Membuka / menutup lesson.
+   * Buka atau tutup lesson.
    */
   const handleOpenLesson = (
     lessonId
@@ -192,10 +272,6 @@ const CourseLearn = () => {
     const numericLessonId =
       Number(lessonId);
 
-    /*
-     * Kalau lesson yang sama diklik,
-     * tutup lesson.
-     */
     if (
       openLessonId ===
       numericLessonId
@@ -204,20 +280,24 @@ const CourseLearn = () => {
       setOpenLessonId(null);
 
       return;
+
     }
 
-    /*
-     * Buka lesson baru.
-     */
     setOpenLessonId(
       numericLessonId
     );
 
+    /*
+     * Hapus error lama ketika student
+     * membuka lesson baru.
+     */
+    setError("");
+
   };
 
   /*
-   * Dipanggil setiap kali student scroll
-   * di dalam area lesson.
+   * Cek apakah student sudah mencapai
+   * bagian paling bawah learning area.
    */
   const handleLessonScroll = (
     event,
@@ -227,11 +307,6 @@ const CourseLearn = () => {
     const element =
       event.currentTarget;
 
-    /*
-     * Toleransi 10px supaya perbedaan
-     * pembulatan browser tidak membuat
-     * tombol tidak pernah aktif.
-     */
     const reachedBottom =
       element.scrollTop +
         element.clientHeight >=
@@ -252,6 +327,7 @@ const CourseLearn = () => {
         );
 
         return next;
+
       }
     );
 
@@ -265,26 +341,26 @@ const CourseLearn = () => {
       Number(lessonId);
 
     /*
-     * Safety check:
-     * lesson harus sudah selesai dibaca /
-     * discroll sampai bottom.
+     * Frontend gate:
+     * lesson harus sudah discroll
+     * sampai bottom.
      */
     if (
       !lessonReady.has(
         numericLessonId
       )
     ) {
+
       setError(
         "Please open and scroll to the bottom of the lesson first."
       );
 
       return;
+
     }
 
     /*
-     * Jangan kirim request kalau lesson
-     * sudah completed atau request lain
-     * masih berjalan.
+     * Jangan submit dua kali.
      */
     if (
       completingLessonId ||
@@ -311,7 +387,7 @@ const CourseLearn = () => {
       );
 
       /*
-       * Update completed state.
+       * Update local state.
        */
       setCompletedLessons(
         (current) => {
@@ -329,10 +405,10 @@ const CourseLearn = () => {
       );
 
       /*
-       * Reload enrollment data supaya
-       * progress_percentage,
-       * completed_required,
-       * enrollment.status
+       * Refresh enrollment supaya
+       * progress percentage,
+       * completed lesson count,
+       * dan status enrollment
        * tetap sinkron dengan backend.
        */
       const enrollmentResponse =
@@ -352,6 +428,12 @@ const CourseLearn = () => {
         );
 
       }
+
+      /*
+       * Kalau lesson mempunyai quiz,
+       * quiz akan tersedia setelah lesson
+       * selesai.
+       */
 
     } catch (error) {
 
@@ -505,6 +587,17 @@ const CourseLearn = () => {
             lessons in this course.
           </p>
 
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                "/student/certificates"
+              )
+            }
+          >
+            View My Certificates
+          </button>
+
         </div>
 
       )}
@@ -572,6 +665,11 @@ const CourseLearn = () => {
                       ) ===
                       lessonId;
 
+                    const quiz =
+                      lessonQuizzes[
+                        lessonId
+                      ];
+
                     return (
                       <article
                         key={lesson.id}
@@ -588,7 +686,9 @@ const CourseLearn = () => {
 
                             <span className="builder-order">
                               Lesson{" "}
-                              {lesson.sort_order}
+                              {
+                                lesson.sort_order
+                              }
                             </span>
 
                             <h3>
@@ -653,13 +753,12 @@ const CourseLearn = () => {
                         </div>
 
                         {isOpen && (
+
                           <div className="lesson-learning-area">
 
                             <div
                               className="lesson-content-scroll"
-                              onScroll={(
-                                event
-                              ) =>
+                              onScroll={(event) =>
                                 handleLessonScroll(
                                   event,
                                   lessonId
@@ -670,6 +769,7 @@ const CourseLearn = () => {
                               <div className="lesson-content">
 
                                 {lesson.description && (
+
                                   <div className="lesson-description">
 
                                     <h4>
@@ -683,6 +783,7 @@ const CourseLearn = () => {
                                     </p>
 
                                   </div>
+
                                 )}
 
                                 {lesson.content_type ===
@@ -847,13 +948,12 @@ const CourseLearn = () => {
                                   </h4>
 
                                   <p>
-                                    Please make sure you have
-                                    reviewed the learning material
-                                    above before completing this lesson.
+                                    Review the learning material
+                                    before completing this lesson.
                                   </p>
 
                                   <p>
-                                    Continue scrolling to the bottom
+                                    Scroll all the way to the bottom
                                     of this area to unlock the
                                     completion button.
                                   </p>
@@ -863,6 +963,7 @@ const CourseLearn = () => {
                                 <div className="lesson-bottom-spacer">
 
                                   <div className="lesson-end-marker">
+
                                     <strong>
                                       End of Lesson
                                     </strong>
@@ -871,6 +972,7 @@ const CourseLearn = () => {
                                       You have reached the end
                                       of this lesson.
                                     </p>
+
                                   </div>
 
                                 </div>
@@ -885,7 +987,8 @@ const CourseLearn = () => {
 
                                 <p className="completion-hint">
                                   Scroll to the bottom of this
-                                  lesson to unlock "Mark as Done".
+                                  lesson to unlock
+                                  "Mark as Done".
                                 </p>
 
                               )}
@@ -913,9 +1016,26 @@ const CourseLearn = () => {
 
                               )}
 
+                              {isCompleted &&
+                                quiz && (
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    navigate(
+                                      `/student/quizzes/${quiz.id}/${enrollmentId}`
+                                    )
+                                  }
+                                >
+                                  Take Quiz
+                                </button>
+
+                              )}
+
                             </div>
 
                           </div>
+
                         )}
 
                       </article>

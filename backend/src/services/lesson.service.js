@@ -1,35 +1,37 @@
 const pool = require("../config/database");
 
 const getSectionById = async (sectionId) => {
-  const [rows] = await pool.execute(
-    `SELECT
+const [rows] = await pool.execute(
+`SELECT
       cs.id,
       cs.course_id,
-      c.instructor_id
+      c.instructor_id,
+      c.status AS course_status
     FROM course_sections cs
     INNER JOIN courses c
       ON c.id = cs.course_id
     WHERE cs.id = ?
     LIMIT 1`,
-    [sectionId]
-  );
+[sectionId]
+);
 
-  if (rows.length === 0) {
-    const error = new Error("Section not found");
-    error.statusCode = 404;
-    throw error;
-  }
+if (rows.length === 0) {
+const error = new Error("Section not found");
+error.statusCode = 404;
+throw error;
+}
 
-  return rows[0];
+return rows[0];
 };
 
 const getLessonById = async (id) => {
-  const [rows] = await pool.execute(
-    `SELECT
+const [rows] = await pool.execute(
+`SELECT
       l.id,
       l.section_id,
       cs.course_id,
       c.instructor_id,
+      c.status AS course_status,
       l.title,
       l.description,
       l.content_type,
@@ -47,48 +49,89 @@ const getLessonById = async (id) => {
       ON c.id = cs.course_id
     WHERE l.id = ?
     LIMIT 1`,
-    [id]
-  );
+[id]
+);
 
-  if (rows.length === 0) {
-    const error = new Error("Lesson not found");
-    error.statusCode = 404;
-    throw error;
-  }
+if (rows.length === 0) {
+const error = new Error("Lesson not found");
+error.statusCode = 404;
+throw error;
+}
 
-  return rows[0];
+return rows[0];
 };
 
+/*
+
+* Fase 3A:
+* Perubahan lesson pada course PUBLISHED harus
+* mengembalikan course ke PENDING_REVIEW.
+  */
+  const markCoursePendingReview = async (courseId) => {
+  await pool.execute(
+  `UPDATE courses
+    SET
+      status = 'PENDING_REVIEW',
+      published_at = NULL,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+      AND status = 'PUBLISHED'`,
+  [courseId]
+  );
+  };
+
 const createLesson = async (
-  sectionId,
-  userId,
-  userRole,
-  {
-    title,
-    description,
-    contentType,
-    contentUrl,
-    resourceUrl,
-    durationMinutes,
-    isRequired,
-    sortOrder,
-  }
+sectionId,
+userId,
+userRole,
+{
+title,
+description,
+contentType,
+contentUrl,
+resourceUrl,
+durationMinutes,
+isRequired,
+sortOrder,
+}
 ) => {
-  const section = await getSectionById(sectionId);
+const section = await getSectionById(sectionId);
 
-  if (
-    userRole !== "ADMIN" &&
-    section.instructor_id !== userId
-  ) {
-    const error = new Error(
-      "You can only manage lessons of your own course"
-    );
-    error.statusCode = 403;
-    throw error;
-  }
+if (
+userRole !== "ADMIN" &&
+section.instructor_id !== userId
+) {
+const error = new Error(
+"You can only manage lessons of your own course"
+);
+error.statusCode = 403;
+throw error;
+}
 
-  const [result] = await pool.execute(
-    `INSERT INTO lessons (
+if (
+userRole !== "ADMIN" &&
+section.course_status === "PENDING_REVIEW"
+) {
+const error = new Error(
+"This course is waiting for admin review and cannot be edited"
+);
+error.statusCode = 400;
+throw error;
+}
+
+if (
+userRole !== "ADMIN" &&
+section.course_status === "ARCHIVED"
+) {
+const error = new Error(
+"Archived courses cannot be edited"
+);
+error.statusCode = 400;
+throw error;
+}
+
+const [result] = await pool.execute(
+`INSERT INTO lessons (
       section_id,
       title,
       description,
@@ -100,27 +143,36 @@ const createLesson = async (
       sort_order
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      sectionId,
-      title,
-      description || null,
-      contentType || "VIDEO",
-      contentUrl || null,
-      resourceUrl || null,
-      durationMinutes ?? null,
-      isRequired ?? true,
-      sortOrder ?? 1,
-    ]
-  );
+[
+sectionId,
+title,
+description || null,
+contentType || "VIDEO",
+contentUrl || null,
+resourceUrl || null,
+durationMinutes ?? null,
+isRequired ?? true,
+sortOrder ?? 1,
+]
+);
 
-  return getLessonById(result.insertId);
+if (
+userRole !== "ADMIN" &&
+section.course_status === "PUBLISHED"
+) {
+await markCoursePendingReview(
+section.course_id
+);
+}
+
+return getLessonById(result.insertId);
 };
 
 const getLessonsBySectionId = async (sectionId) => {
-  await getSectionById(sectionId);
+await getSectionById(sectionId);
 
-  const [rows] = await pool.execute(
-    `SELECT
+const [rows] = await pool.execute(
+`SELECT
       id,
       section_id,
       title,
@@ -136,42 +188,64 @@ const getLessonsBySectionId = async (sectionId) => {
     FROM lessons
     WHERE section_id = ?
     ORDER BY sort_order ASC, id ASC`,
-    [sectionId]
-  );
+[sectionId]
+);
 
-  return rows;
+return rows;
 };
 
 const updateLesson = async (
-  id,
-  userId,
-  userRole,
-  {
-    title,
-    description,
-    contentType,
-    contentUrl,
-    resourceUrl,
-    durationMinutes,
-    isRequired,
-    sortOrder,
-  }
+id,
+userId,
+userRole,
+{
+title,
+description,
+contentType,
+contentUrl,
+resourceUrl,
+durationMinutes,
+isRequired,
+sortOrder,
+}
 ) => {
-  const lesson = await getLessonById(id);
+const lesson = await getLessonById(id);
 
-  if (
-    userRole !== "ADMIN" &&
-    lesson.instructor_id !== userId
-  ) {
-    const error = new Error(
-      "You can only update lessons of your own course"
-    );
-    error.statusCode = 403;
-    throw error;
-  }
+if (
+userRole !== "ADMIN" &&
+lesson.instructor_id !== userId
+) {
+const error = new Error(
+"You can only update lessons of your own course"
+);
+error.statusCode = 403;
+throw error;
+}
 
-  await pool.execute(
-    `UPDATE lessons
+if (
+userRole !== "ADMIN" &&
+lesson.course_status === "PENDING_REVIEW"
+) {
+const error = new Error(
+"This course is waiting for admin review and cannot be edited"
+);
+error.statusCode = 400;
+throw error;
+}
+
+if (
+userRole !== "ADMIN" &&
+lesson.course_status === "ARCHIVED"
+) {
+const error = new Error(
+"Archived courses cannot be edited"
+);
+error.statusCode = 400;
+throw error;
+}
+
+await pool.execute(
+`UPDATE lessons
      SET
        title = ?,
        description = ?,
@@ -182,62 +256,102 @@ const updateLesson = async (
        is_required = ?,
        sort_order = ?
      WHERE id = ?`,
-    [
-      title ?? lesson.title,
-      description !== undefined
-        ? description
-        : lesson.description,
-      contentType ?? lesson.content_type,
-      contentUrl !== undefined
-        ? contentUrl
-        : lesson.content_url,
-      resourceUrl !== undefined
-        ? resourceUrl
-        : lesson.resource_url,
-      durationMinutes !== undefined
-        ? durationMinutes
-        : lesson.duration_minutes,
-      isRequired !== undefined
-        ? isRequired
-        : lesson.is_required,
-      sortOrder ?? lesson.sort_order,
-      id,
-    ]
-  );
+[
+title ?? lesson.title,
+description !== undefined
+? description
+: lesson.description,
+contentType ?? lesson.content_type,
+contentUrl !== undefined
+? contentUrl
+: lesson.content_url,
+resourceUrl !== undefined
+? resourceUrl
+: lesson.resource_url,
+durationMinutes !== undefined
+? durationMinutes
+: lesson.duration_minutes,
+isRequired !== undefined
+? isRequired
+: lesson.is_required,
+sortOrder ?? lesson.sort_order,
+id,
+]
+);
 
-  return getLessonById(id);
+if (
+userRole !== "ADMIN" &&
+lesson.course_status === "PUBLISHED"
+) {
+await markCoursePendingReview(
+lesson.course_id
+);
+}
+
+return getLessonById(id);
 };
 
 const deleteLesson = async (
-  id,
-  userId,
-  userRole
+id,
+userId,
+userRole
 ) => {
-  const lesson = await getLessonById(id);
+const lesson = await getLessonById(id);
 
-  if (
-    userRole !== "ADMIN" &&
-    lesson.instructor_id !== userId
-  ) {
-    const error = new Error(
-      "You can only delete lessons of your own course"
-    );
-    error.statusCode = 403;
-    throw error;
-  }
+if (
+userRole !== "ADMIN" &&
+lesson.instructor_id !== userId
+) {
+const error = new Error(
+"You can only delete lessons of your own course"
+);
+error.statusCode = 403;
+throw error;
+}
 
-  await pool.execute(
-    `DELETE FROM lessons
+if (
+userRole !== "ADMIN" &&
+lesson.course_status === "PENDING_REVIEW"
+) {
+const error = new Error(
+"This course is waiting for admin review and cannot be edited"
+);
+error.statusCode = 400;
+throw error;
+}
+
+if (
+userRole !== "ADMIN" &&
+lesson.course_status === "ARCHIVED"
+) {
+const error = new Error(
+"Archived courses cannot be edited"
+);
+error.statusCode = 400;
+throw error;
+}
+
+await pool.execute(
+`DELETE FROM lessons
      WHERE id = ?`,
-    [id]
-  );
+[id]
+);
 
-  return lesson;
+if (
+userRole !== "ADMIN" &&
+lesson.course_status === "PUBLISHED"
+) {
+await markCoursePendingReview(
+lesson.course_id
+);
+}
+
+return lesson;
 };
 
 module.exports = {
-  createLesson,
-  getLessonsBySectionId,
-  updateLesson,
-  deleteLesson,
+createLesson,
+getLessonsBySectionId,
+updateLesson,
+deleteLesson,
 };

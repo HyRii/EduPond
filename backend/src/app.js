@@ -9,6 +9,9 @@ const lessonRoutes = require("./routes/lesson.routes")
 const enrollmentRoutes = require("./routes/enrollment.routes");
 const userRoutes = require("./routes/user.routes");
 const progressRoutes = require("./routes/progress.routes");
+const quizRoutes = require("./routes/quiz.routes");
+const certificateRoutes =
+  require("./routes/certificate.routes");
 
 const app = express();
 
@@ -26,6 +29,15 @@ app.use("/api", sectionRoutes);
 app.use("/api", lessonRoutes);
 app.use("/api", enrollmentRoutes);
 app.use("/api", progressRoutes);
+app.use(
+  "/api",
+  quizRoutes
+);
+
+app.use(
+  "/api",
+  certificateRoutes
+);
 
 app.get("/", (req, res) => {
   res.status(200).json({
