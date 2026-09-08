@@ -7,6 +7,7 @@ import {
 
 import ProtectedRoute from "./ProtectedRoute";
 
+import HomePage from "../pages/HomePage";
 import Login from "../pages/auth/Login";
 import RegisterStudent from "../pages/auth/RegisterStudent";
 import RegisterInstructor from "../pages/auth/RegisterInstructor";
@@ -53,7 +54,7 @@ const AppRouter = () => (
       ========================= */}
       <Route
         path="/"
-        element={<Navigate to="/login" replace />}
+        element={<HomePage />}
       />
 
       <Route

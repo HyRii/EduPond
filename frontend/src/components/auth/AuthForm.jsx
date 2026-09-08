@@ -1,4 +1,7 @@
 import { useState } from "react";
+import PondBackground from "../common/PondBackground";
+import PondMark from "../common/PondMark";
+import WaterLilyButton from "../common/WaterLilyButton";
 
 const AuthForm = ({
   title,
@@ -40,19 +43,29 @@ const AuthForm = ({
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-header">
+      <PondBackground variant="deep" bubbleCount={18} />
+
+      <div className="auth-card animate-float">
+        <div className="flex items-center gap-3">
+          <PondMark size={48} className="drop-shadow-sm" />
+          <div>
+            <p className="pond-eyebrow">EduPond</p>
+            <p className="text-xs text-pond-400">a pond of knowledge</p>
+          </div>
+        </div>
+
+        <div className="auth-header mt-5">
           <h1>{title}</h1>
           <p>{subtitle}</p>
         </div>
 
         {error && (
-          <div className="auth-error">
+          <div className="auth-error" role="alert">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {fields.map((field) => (
             <div
               className="form-group"
@@ -74,13 +87,15 @@ const AuthForm = ({
             </div>
           ))}
 
-          <button
-            className="auth-button"
+          <WaterLilyButton
             type="submit"
-            disabled={loading}
+            variant="bloom"
+            fullWidth
+            loading={loading}
+            className="auth-button"
           >
             {loading ? "Please wait..." : submitText}
-          </button>
+          </WaterLilyButton>
         </form>
 
         {footer && (

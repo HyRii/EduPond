@@ -1,14 +1,9 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import WaterLilyButton from "../common/WaterLilyButton";
 
 const CourseCard = ({ course }) => {
-  const navigate = useNavigate();
-
-  const handleViewCourse = () => {
-    navigate(`/courses/${course.id}`);
-  };
-
   return (
-    <article className="course-card">
+    <article className="course-card group">
       <div className="course-card-thumbnail">
         {course.thumbnail_url ? (
           <img
@@ -24,7 +19,7 @@ const CourseCard = ({ course }) => {
 
       <div className="course-card-content">
         <span className="course-card-category">
-          {course.category_name}
+          {course.category_name || "Uncategorized"}
         </span>
 
         <h3>{course.title}</h3>
@@ -34,25 +29,22 @@ const CourseCard = ({ course }) => {
         </p>
 
         <div className="course-card-meta">
-          <span>{course.difficulty}</span>
+          {course.difficulty && <span>{course.difficulty}</span>}
 
           {course.duration_minutes !== null &&
             course.duration_minutes !== undefined && (
-              <span>
-                {course.duration_minutes} min
-              </span>
+              <span>{course.duration_minutes} min</span>
             )}
         </div>
 
-        <button
-          type="button"
-          onClick={() =>
-            navigate(`/student/courses/${course.id}`)
-          }
+        <WaterLilyButton
+          as={Link}
+          to={`/student/courses/${course.id}`}
+          variant="leaf"
+          className="mt-auto"
         >
           View Course
-        </button>
-
+        </WaterLilyButton>
       </div>
     </article>
   );

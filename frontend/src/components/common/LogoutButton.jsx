@@ -18,7 +18,7 @@ const LogoutButton = () => {
       className="logout-button"
       onClick={handleLogout}
     >
-      Logout
+      <span aria-hidden="true">🌙</span> Logout
     </button>
   );
 };

@@ -13,9 +13,7 @@ const DataTable = ({
 
   return (
     <div className="table-wrapper">
-
       <table className="data-table">
-
         <thead>
           <tr>
             {columns.map((column) => (
@@ -39,9 +37,7 @@ const DataTable = ({
             </tr>
           ))}
         </tbody>
-
       </table>
-
     </div>
   );
 };

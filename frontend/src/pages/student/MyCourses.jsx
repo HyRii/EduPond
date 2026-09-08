@@ -184,7 +184,7 @@ const MyCourses = () => {
 
               <article
                 key={enrollment.id}
-                className="student-course-card"
+                className="student-course-card group"
               >
 
                 {enrollment.thumbnail_url && (
