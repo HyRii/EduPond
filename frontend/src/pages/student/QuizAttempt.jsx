@@ -1,4 +1,3 @@
-// EDITED (Phase 3D): Added retry cooldown UI and certificate result navigation.
 import {
   useEffect,
   useState,

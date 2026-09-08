@@ -1,4 +1,3 @@
-// NEW FILE (Phase 5): Dashboard API client, mirrors the three backend endpoints.
 import apiRequest from "./api";
 
 export const getAdminDashboard = async () => apiRequest("/dashboard/admin");

@@ -487,14 +487,6 @@ const CourseLearn = () => {
         .progress_percentage || 0
     );
 
-  /*
-   * NEW (Phase 3B):
-   * Find the lesson (and its parent section, for the breadcrumb)
-   * that is currently open, so it can be rendered as a full-screen
-   * reader instead of an inline card. `sections` is nested
-   * (section -> lessons), so it needs a small search rather than a
-   * plain lookup by id.
-   */
   const openLessonId_num =
     Number(openLessonId);
 
@@ -708,17 +700,6 @@ const CourseLearn = () => {
                       openLessonId ===
                       lessonId;
 
-                    /*
-                     * EDITED (Phase 3B): canComplete / isCompleting /
-                     * quiz used to be computed here too, for the old
-                     * inline "lesson-learning-area" card. That card
-                     * is gone (the reader is now the full-screen
-                     * overlay below), and the overlay uses its own
-                     * equivalents (canCompleteOpenLesson,
-                     * isCompletingOpenLesson, openLessonQuiz,
-                     * computed near `progress`), so those three are
-                     * no longer needed in this per-lesson-card scope.
-                     */
 
                     return (
                       <article
@@ -791,16 +772,6 @@ const CourseLearn = () => {
                                   )
                                 }
                               >
-                                {/*
-                                  EDITED (Phase 3B): this button now
-                                  always opens the full-screen reader
-                                  (see lesson-fullscreen-overlay
-                                  below). Closing happens from the
-                                  "← Back to Course" button inside
-                                  that overlay, not by clicking this
-                                  button again, so the previous
-                                  "Close Lesson" toggle label is gone.
-                                */}
                                 {isOpen
                                   ? "Continue Lesson"
                                   : "Open Lesson"}
@@ -811,25 +782,6 @@ const CourseLearn = () => {
                           </div>
 
                         </div>
-
-                        {/*
-                          EDITED (Phase 3B):
-                          The lesson content used to render inline,
-                          right here, as a small expanding card inside
-                          the section list ("isOpen && (<div
-                          className="lesson-learning-area">...")).
-                          That's the "cuma card kecil" behaviour that
-                          was reported as a problem.
-
-                          The lesson reader is now a dedicated
-                          full-screen overlay (see the
-                          "lesson-fullscreen-overlay" block rendered
-                          near the bottom of this component, driven by
-                          the `openLesson` variable), so there is
-                          nothing to render inline here anymore.
-                          `isOpen` now only controls the label of the
-                          "Open Lesson" button below.
-                        */}
 
                       </article>
                     );
@@ -846,17 +798,6 @@ const CourseLearn = () => {
 
       </div>
 
-      {/*
-        NEW (Phase 3B):
-        Full-screen lesson reader. Renders on top of everything else
-        (see .lesson-fullscreen-overlay in index.css) instead of the
-        old inline "lesson-learning-area" card, so opening a lesson
-        feels like opening a news article rather than expanding a
-        small card in a list. Content, scroll-to-complete, and the
-        completion/quiz actions are the same as before -- only the
-        layout changed, and `openLesson`/`openLessonSection` etc. are
-        computed above, near `progress`.
-      */}
       {openLesson && (
 
         <div className="lesson-fullscreen-overlay">
@@ -964,17 +905,6 @@ const CourseLearn = () => {
                     </h4>
 
                     {openLesson.content_url ? (
-
-                      /*
-                       * EDITED (Phase 3B): an external article link
-                       * used to just open in a new tab. Now that the
-                       * lesson itself already renders full-screen
-                       * like a news article, it's embedded directly
-                       * in an iframe so the student can read it
-                       * without leaving the page (with the external
-                       * link kept as a fallback for sites that block
-                       * being framed).
-                       */
                       <>
                         <iframe
                           src={

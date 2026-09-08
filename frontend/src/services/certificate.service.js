@@ -15,7 +15,7 @@ export const getCertificateById =
     );
   };
 
-// NEW (Phase 3D): Download the generated JPEG certificate as a local file.
+
 export const downloadCertificate = async (certificateUrl, fileName) => {
   const response = await fetch(certificateUrl);
 

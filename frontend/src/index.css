@@ -1686,14 +1686,6 @@ input {
   }
 }
 
-/* ============================= */
-/* NEW (Phase 5): DASHBOARD METRICS       */
-/* Shared across Admin/Instructor/Student */
-/* dashboards -- role-specific page/card  */
-/* classes (admin-page, student-page,     */
-/* etc.) already existed and are reused   */
-/* alongside these.                       */
-/* ============================= */
 
 .metric-grid {
   display: grid;

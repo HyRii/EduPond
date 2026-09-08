@@ -1,4 +1,3 @@
-// NEW FILE (Phase 4): Student Ask Course request page.
 import { useEffect, useState } from "react";
 import { getCategories } from "../../services/category.service";
 import { createRequest, getMyRequests } from "../../services/courseRequest.service";

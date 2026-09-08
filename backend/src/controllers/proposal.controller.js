@@ -1,4 +1,3 @@
-// NEW FILE (Phase 4): HTTP boundary for instructor proposals/admin review.
 const service = require("../services/proposal.service");
 
 const createProposal = async (req, res, next) => {

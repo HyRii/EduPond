@@ -1,4 +1,3 @@
-// NEW FILE (Phase 4): Instructor proposal status and feedback list.
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getMyProposals } from "../../services/proposal.service";

@@ -1,4 +1,3 @@
-// NEW FILE (Phase 4): Instructor proposal and admin review routes.
 const express = require("express");
 const { authenticate } = require("../middleware/auth.middleware");
 const { authorize } = require("../middleware/role.middleware");

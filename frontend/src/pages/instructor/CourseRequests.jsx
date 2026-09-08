@@ -1,4 +1,3 @@
-// NEW FILE (Phase 4): Instructor view of approved student demand.
 import { useEffect, useState } from "react";
 import { getAvailableRequests } from "../../services/courseRequest.service";
 import EmptyState from "../../components/common/EmptyState";

@@ -1,4 +1,3 @@
-// EDITED (Phase 3D): Added generated certificate JPEG thumbnails.
 import {
   useEffect,
   useState,

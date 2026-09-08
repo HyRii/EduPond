@@ -14,15 +14,7 @@ import RegisterInstructor from "../pages/auth/RegisterInstructor";
 import CourseCatalog from "../pages/student/CourseCatalog";
 import CourseDetail from "../pages/student/CourseDetail";
 import MyCourses from "../pages/student/MyCourses";
-// NEW (Phase 3B): CourseLearn.jsx already existed (built for the
-// lesson-progress work) but was never imported/wired into the router
-// below -- the route still rendered a "Phase 2" placeholder instead
-// of this component. Fixed below.
 import CourseLearn from "../pages/student/CourseLearn";
-// EDITED (Phase 3C): QuizAttempt.jsx already existed (and CourseLearn.jsx's
-// "Take Quiz" button already linked to /student/quizzes/:quizId/:enrollmentId)
-// but the route itself was never registered below, so that link 404'd via
-// the catch-all route. Added here together with the matching <Route>.
 import QuizAttempt from "../pages/student/QuizAttempt";
 import Certificates from "../pages/student/Certificates";
 import CertificateDetail from "../pages/student/CertificateDetail";
@@ -31,9 +23,7 @@ import StudentLayout from "../layouts/StudentLayout";
 import InstructorLayout from "../layouts/InstructorLayout";
 import AdminLayout from "../layouts/AdminLayout";
 
-// NEW (Phase 5): real, metrics-backed dashboards for each role. These
-// replace the inline SimpleDashboard placeholder (removed below) that used
-// to render at the "/student", "/instructor", and "/admin" index routes.
+
 import StudentDashboard from "../pages/student/StudentDashboard";
 import InstructorDashboard from "../pages/instructor/InstructorDashboard";
 import AdminDashboard from "../pages/admin/AdminDashboard";
@@ -53,9 +43,7 @@ import AskCourse from "../pages/student/AskCourse";
 import CourseRequestReview from "../pages/admin/CourseRequestReview";
 import ProposalReview from "../pages/admin/ProposalReview";
 
-// EDITED (Phase 5): SimpleDashboard placeholder removed now that
-// StudentDashboard / InstructorDashboard / AdminDashboard exist and are
-// wired into the index routes below.
+
 
 const AppRouter = () => (
   <BrowserRouter>
@@ -107,7 +95,7 @@ const AppRouter = () => (
           </ProtectedRoute>
         }
       >
-        {/* EDITED (Phase 5): real dashboard with learning-progress metrics. */}
+
         <Route
           index
           element={<StudentDashboard />}
@@ -128,25 +116,12 @@ const AppRouter = () => (
           element={<MyCourses />}
         />
 
-        {/*
-          EDITED (Phase 3B): this route used to render an inline
-          placeholder ("Lesson progress will be implemented in
-          Phase 2.") even though CourseLearn.jsx -- the full lesson
-          player with progress tracking and, as of this phase, the
-          full-screen reader -- already existed and was already being
-          linked to from MyCourses.jsx. It just wasn't wired in here.
-        */}
+  
         <Route
           path="my-courses/:enrollmentId"
           element={<CourseLearn />}
         />
 
-        {/*
-          NEW (Phase 3C): matches the URL CourseLearn.jsx already builds
-          (`/student/quizzes/${quiz.id}/${enrollmentId}`) for its
-          "Take Quiz" button. QuizAttempt.jsx reads quizId/enrollmentId
-          from useParams() using these exact names.
-        */}
         <Route
           path="quizzes/:quizId/:enrollmentId"
           element={<QuizAttempt />}
@@ -154,7 +129,7 @@ const AppRouter = () => (
 
         <Route path="course-requests" element={<AskCourse />} />
 
-        {/* EDITED (Phase 3D): Certificate pages now use the generated JPEG. */}
+
         <Route
           path="certificates"
           element={<Certificates />}
@@ -177,7 +152,7 @@ const AppRouter = () => (
           </ProtectedRoute>
         }
       >
-        {/* EDITED (Phase 5): real dashboard with course/proposal metrics. */}
+
         <Route
           index
           element={<InstructorDashboard />}
@@ -227,7 +202,7 @@ const AppRouter = () => (
           </ProtectedRoute>
         }
       >
-        {/* EDITED (Phase 5): real dashboard with platform-wide metrics. */}
+        
         <Route
           index
           element={<AdminDashboard />}

@@ -1,4 +1,3 @@
-// NEW FILE (Phase 4): Admin proposal review queue and conversion to course.
 import { useEffect, useState } from "react";
 import { listProposals, getProposalDetail, reviewProposal, convertProposal } from "../../services/proposal.service";
 import Badge from "../../components/common/Badge";

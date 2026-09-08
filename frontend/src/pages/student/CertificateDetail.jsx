@@ -1,4 +1,3 @@
-// EDITED (Phase 3D): Replaced placeholder certificate with generated JPEG preview/download.
 import {
   useEffect,
   useState,

@@ -1,4 +1,3 @@
-// NEW FILE (Phase 4): Admin request moderation and demand aggregation.
 import { useEffect, useState } from "react";
 import { getDemand, listRequests, reviewRequest } from "../../services/courseRequest.service";
 import { getCategories } from "../../services/category.service";

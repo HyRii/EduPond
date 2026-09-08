@@ -315,7 +315,6 @@ const getQuizForLesson = async (
   }
 };
 
-// NEW (Phase 3D): Student endpoint for checking the one-hour retry cooldown.
 const getRetryStatus = async (req, res, next) => {
   try {
     const enrollmentId = Number(req.query.enrollmentId);

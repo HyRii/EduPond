@@ -1,4 +1,3 @@
-// NEW FILE (Phase 4): HTTP boundary for Ask Course.
 const service = require("../services/courseRequest.service");
 
 const createRequest = async (req, res, next) => {

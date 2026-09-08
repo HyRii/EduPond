@@ -1,4 +1,3 @@
-// NEW FILE (Phase 4): Instructor proposal editor with nested section/lesson drafts.
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getCategories } from "../../services/category.service";

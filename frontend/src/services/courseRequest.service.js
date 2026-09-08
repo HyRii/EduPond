@@ -1,4 +1,3 @@
-// NEW FILE (Phase 4): Ask Course API client.
 import apiRequest from "./api";
 
 export const createRequest = async (data) =>

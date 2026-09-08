@@ -1,4 +1,3 @@
-// NEW FILE (Phase 4): Instructor proposal/admin review API client.
 import apiRequest from "./api";
 
 export const createProposal = async (data) =>
