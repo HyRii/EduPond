@@ -15,12 +15,6 @@ const LessonForm = ({
   lesson,
   onSave,
   onCancel,
-  // EDITED (Phase 3A): new optional prop. When adding a brand-new
-  // lesson (lesson === null/undefined), the form used to always
-  // default sortOrder to 1, so a second, third, etc. lesson added to
-  // the same section all silently proposed "1" as the order and had
-  // to be corrected by hand every time. CourseBuilder.jsx now passes
-  // the next free order (section.lessons.length + 1) here.
   defaultSortOrder,
 }) => {
 
@@ -30,9 +24,6 @@ const LessonForm = ({
   useEffect(() => {
 
     if (!lesson) {
-
-      // EDITED (Phase 3A): use defaultSortOrder when creating a new
-      // lesson instead of always falling back to 1.
       setForm({
         ...initialForm,
         sortOrder:
@@ -72,8 +63,6 @@ const LessonForm = ({
         lesson.sort_order || 1,
     });
 
-  // EDITED (Phase 3A): re-run when defaultSortOrder changes too, so
-  // opening "Add Lesson" on a different section proposes the right order.
   }, [lesson, defaultSortOrder]);
 
   const updateField = (

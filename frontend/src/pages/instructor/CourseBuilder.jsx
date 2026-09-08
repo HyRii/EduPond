@@ -256,8 +256,6 @@ const CourseBuilder = () => {
           }}
         >
           <SectionForm
-            // EDITED (Phase 3A): propose the next free order instead
-            // of always "1" when adding a new section.
             defaultSortOrder={
               sections.length + 1
             }
@@ -426,10 +424,6 @@ const CourseBuilder = () => {
                   }}
                 >
                   <LessonForm
-                    // EDITED (Phase 3A): propose the next free order
-                    // within THIS section instead of always "1", so
-                    // adding several lessons in a row doesn't require
-                    // manually fixing the order every time.
                     defaultSortOrder={
                       section.lessons
                         .length + 1

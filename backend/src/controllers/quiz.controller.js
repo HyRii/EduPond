@@ -1,4 +1,3 @@
-// EDITED (Phase 3D): Added retry-status endpoint and 429 cooldown response.
 const quizService = require("../services/quiz.service");
 
 const createQuiz = async (

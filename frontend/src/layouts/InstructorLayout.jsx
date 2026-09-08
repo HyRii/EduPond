@@ -38,13 +38,11 @@ const InstructorLayout = () => {
             My Courses
           </NavLink>
 
-          {/* EDITED (Phase 4): Ask Course demand is now available to instructors. */}
           <NavLink to="/instructor/course-requests"
             className={({ isActive }) => isActive ? "instructor-nav-link active" : "instructor-nav-link"}>
             Course Requests
           </NavLink>
 
-          {/* EDITED (Phase 4): Proposal workflow is now available. */}
           <NavLink to="/instructor/proposals"
             className={({ isActive }) => isActive ? "instructor-nav-link active" : "instructor-nav-link"}>
             Proposals

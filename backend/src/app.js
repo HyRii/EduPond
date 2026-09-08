@@ -14,6 +14,7 @@ const certificateRoutes =
   require("./routes/certificate.routes");
 const courseRequestRoutes = require("./routes/courseRequest.routes");
 const proposalRoutes = require("./routes/proposal.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
 const errorMiddleware = require("./middleware/error.middleware");
 
 const app = express();
@@ -21,14 +22,11 @@ const app = express();
 app.use(
   cors({
     origin: "http://localhost:5173",
-    // EDITED (Phase 3D): PATCH is needed by later roadmap phases.
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true
   })
 );
 app.use(express.json());
-
-// EDITED (Phase 3D): Serve generated certificate JPEG files.
 app.use("/uploads", express.static(require("path").resolve(__dirname, "../uploads")));
 app.use("/api/categories", categoryRoutes);
 app.use("/api/courses", courseRoutes);
@@ -61,9 +59,12 @@ app.use(
   userRoutes
 );
 
-// EDITED (Phase 4): mount Ask Course and Instructor Proposal workflows.
+
 app.use("/api", courseRequestRoutes);
 app.use("/api", proposalRoutes);
+
+
+app.use("/api", dashboardRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
@@ -72,7 +73,6 @@ app.use((req, res) => {
   });
 });
 
-// EDITED (Phase 4): centralized error handler is registered last.
 app.use(errorMiddleware);
 
 module.exports = app;

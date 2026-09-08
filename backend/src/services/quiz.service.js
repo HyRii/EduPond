@@ -1,5 +1,4 @@
 const pool = require("../config/database");
-// EDITED (Phase 3D): Certificate issuance is triggered immediately after a passing quiz.
 const { issueCertificateIfEligible } = require("./certificate.service");
 
 const QUIZ_RETRY_COOLDOWN_MS = 60 * 60 * 1000;
@@ -611,7 +610,7 @@ const submitAttempt = async (
     studentId
   );
 
-  // EDITED (Phase 3D): A failed attempt starts a one-hour retry cooldown.
+
   const retryStatus = await getRetryStatus(
     quizId,
     enrollmentId,
@@ -771,9 +770,6 @@ const submitAttempt = async (
 
     let certificate = null;
 
-    // EDITED (Phase 3D): Passing a quiz now triggers the same eligibility
-    // check used by lesson completion. The certificate service runs after
-    // this transaction has committed.
     if (passed) {
       certificate = await issueCertificateIfEligible(
         enrollmentId

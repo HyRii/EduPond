@@ -269,9 +269,7 @@ const issueCertificateIfEligible = async (enrollmentId) => {
     connection.release();
   }
 
-  // EDITED (Phase 3D): Render the JPEG after the DB transaction has committed.
-  // A renderer/filesystem failure no longer rolls back course progress or the
-  // certificate record itself.
+
   if (!existingCertificate) {
     return null;
   }

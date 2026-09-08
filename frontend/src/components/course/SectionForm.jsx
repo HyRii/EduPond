@@ -4,9 +4,6 @@ const SectionForm = ({
   section,
   onSave,
   onCancel,
-  // EDITED (Phase 3A): new optional prop, same reasoning as
-  // LessonForm's defaultSortOrder -- avoids every new section
-  // defaulting to order "1".
   defaultSortOrder,
 }) => {
 
@@ -29,9 +26,6 @@ const SectionForm = ({
       section?.description || ""
     );
 
-    // EDITED (Phase 3A): when editing an existing section, keep using
-    // its own sort_order. When adding a new one (section is
-    // null/undefined), propose defaultSortOrder instead of always "1".
     setSortOrder(
       section?.sort_order ||
         defaultSortOrder ||

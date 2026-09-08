@@ -48,7 +48,6 @@ const StudentLayout = () => {
             My Courses
           </NavLink>
 
-          {/* EDITED (Phase 4): Student can now submit and track Ask Course requests. */}
           <NavLink
             to="/student/course-requests"
             className={({ isActive }) =>
@@ -58,7 +57,6 @@ const StudentLayout = () => {
             Ask Course
           </NavLink>
 
-          {/* EDITED (Phase 3D): Certificates are now available. */}
           <NavLink
             to="/student/certificates"
             className={({ isActive }) =>

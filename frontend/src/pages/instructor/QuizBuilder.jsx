@@ -9,11 +9,6 @@ import {
   getQuizByLessonId,
   createQuiz,
   addQuestion,
-  // EDITED (Phase 3A fix): addOption is no longer called from this page.
-  // The backend creates a question together with all of its options in a
-  // single atomic transaction (see quiz.service.js -> addQuestion on the
-  // backend), so calling addOption afterwards is unnecessary and, before
-  // this fix, unreachable anyway (see note near handleAddQuestion below).
 } from "../../services/quiz.service";
 
 const createEmptyQuestion = () => ({
@@ -362,27 +357,6 @@ const QuizBuilder = () => {
     try {
       setSavingQuestion(true);
       setError("");
-
-      /*
-       * EDITED (Phase 3A fix):
-       * Previously this called addQuestion() with only
-       * { questionText, questionType } and then looped over
-       * validOptions calling addOption() for each one afterwards.
-       *
-       * That always failed: the backend's POST
-       * /quizzes/:quizId/questions endpoint requires an `options`
-       * array (>= 2 options, exactly 1 marked correct) in the SAME
-       * request body and rejects the request with 400 "options must
-       * be an array" when it's missing (see
-       * backend/src/controllers/quiz.controller.js -> createQuestion,
-       * and backend/src/services/quiz.service.js -> addQuestion,
-       * which inserts the question and its options together inside
-       * one DB transaction). Because that first call always failed,
-       * the addOption() loop below it was never actually reached.
-       *
-       * Fix: send all options together with the question in a single
-       * addQuestion() call, matching what the backend expects.
-       */
       const questionResponse =
         await addQuestion(
           quiz.id,

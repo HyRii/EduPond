@@ -1,4 +1,3 @@
-// EDITED (Phase 3D): Added GET retry-status route for failed quiz cooldown.
 const express = require("express");
 
 const {

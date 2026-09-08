@@ -31,7 +31,12 @@ import StudentLayout from "../layouts/StudentLayout";
 import InstructorLayout from "../layouts/InstructorLayout";
 import AdminLayout from "../layouts/AdminLayout";
 
-import LogoutButton from "../components/common/LogoutButton";
+// NEW (Phase 5): real, metrics-backed dashboards for each role. These
+// replace the inline SimpleDashboard placeholder (removed below) that used
+// to render at the "/student", "/instructor", and "/admin" index routes.
+import StudentDashboard from "../pages/student/StudentDashboard";
+import InstructorDashboard from "../pages/instructor/InstructorDashboard";
+import AdminDashboard from "../pages/admin/AdminDashboard";
 
 import InstructorCourses from "../pages/instructor/InstructorCourses";
 import CourseForm from "../pages/instructor/CourseForm";
@@ -48,16 +53,9 @@ import AskCourse from "../pages/student/AskCourse";
 import CourseRequestReview from "../pages/admin/CourseRequestReview";
 import ProposalReview from "../pages/admin/ProposalReview";
 
-const SimpleDashboard = ({ role }) => (
-  <section>
-    <h1>{role} Dashboard</h1>
-    <p>
-      The role-specific dashboard metrics will be completed in Phase 5.
-    </p>
-
-    <LogoutButton />
-  </section>
-);
+// EDITED (Phase 5): SimpleDashboard placeholder removed now that
+// StudentDashboard / InstructorDashboard / AdminDashboard exist and are
+// wired into the index routes below.
 
 const AppRouter = () => (
   <BrowserRouter>
@@ -109,11 +107,10 @@ const AppRouter = () => (
           </ProtectedRoute>
         }
       >
+        {/* EDITED (Phase 5): real dashboard with learning-progress metrics. */}
         <Route
           index
-          element={
-            <SimpleDashboard role="Student" />
-          }
+          element={<StudentDashboard />}
         />
 
         <Route
@@ -180,11 +177,10 @@ const AppRouter = () => (
           </ProtectedRoute>
         }
       >
+        {/* EDITED (Phase 5): real dashboard with course/proposal metrics. */}
         <Route
           index
-          element={
-            <SimpleDashboard role="Instructor" />
-          }
+          element={<InstructorDashboard />}
         />
 
         <Route
@@ -231,11 +227,10 @@ const AppRouter = () => (
           </ProtectedRoute>
         }
       >
+        {/* EDITED (Phase 5): real dashboard with platform-wide metrics. */}
         <Route
           index
-          element={
-            <SimpleDashboard role="Admin" />
-          }
+          element={<AdminDashboard />}
         />
 
         <Route
